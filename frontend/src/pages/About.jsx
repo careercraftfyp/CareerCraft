@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Target, Users, Shield, Cpu, Sparkles, Rocket } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const values = [
     {
@@ -112,8 +113,8 @@ export default function About() {
                             Be part of the next generation of career intelligence.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                            <button className="btn-primary text-white border-0 py-4 px-10">Deploy Your Potential</button>
-                            <button className="btn-secondary py-4 px-10">Learn the Tech</button>
+                            <Link to="/signup" className="btn-primary text-white border-0 py-4 px-10">Deploy Your Potential</Link>
+                            <Link to="/services" className="btn-secondary py-4 px-10">Learn the Tech</Link>
                         </div>
                     </div>
                 </div>

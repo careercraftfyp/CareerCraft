@@ -124,10 +124,16 @@ export default function Dashboard() {
 
             {activeTab === 'Overview' && (
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 border border-dark-700 rounded-lg text-sm bg-dark-800/50 hover:bg-dark-700 transition-colors text-white">
+                    <button 
+                        onClick={() => alert("Date range filtering is coming in the next update!")}
+                        className="flex items-center gap-2 px-4 py-2 border border-dark-700 rounded-lg text-sm bg-dark-800/50 hover:bg-dark-700 transition-colors text-white"
+                    >
                         Last Month <ChevronDown className="w-4 h-4" />
                     </button>
-                    <button className="btn-primary flex items-center gap-2 text-sm py-2 px-4 text-white">
+                    <button 
+                        onClick={() => window.print()}
+                        className="btn-primary flex items-center gap-2 text-sm py-2 px-4 text-white"
+                    >
                         <Download className="w-4 h-4" /> <span>Download Report</span>
                     </button>
                 </div>
@@ -432,7 +438,10 @@ export default function Dashboard() {
                                         <Video className="w-5 h-5" />
                                         Launch Session
                                     </Link>
-                                    <button className="btn-secondary px-8">
+                                    <button 
+                                        onClick={() => alert('Interview session history is coming in the next update!')}
+                                        className="btn-secondary px-8"
+                                    >
                                         View Past Sessions
                                     </button>
                                 </div>

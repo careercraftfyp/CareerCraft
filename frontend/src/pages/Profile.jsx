@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function Profile({ embedded = false }) {
-    const { user } = useAuth();
+    const { user, resetPassword } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
@@ -307,11 +307,21 @@ export default function Profile({ embedded = false }) {
                         <h3 className="text-lg font-bold text-white mb-6">Quick Actions</h3>
 
                         <div className="space-y-3">
-                            <button className="w-full btn-primary flex items-center justify-center gap-2 text-sm py-3 text-white">
-                                <Settings className="w-4 h-4" /> Account Settings
-                            </button>
-                            <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-dark-700 hover:border-dark-600 rounded-lg text-sm bg-dark-800/50 hover:bg-dark-700 transition-colors text-dark-300 font-medium">
-                                <Shield className="w-4 h-4" /> Security
+                            <button 
+                                onClick={async () => {
+                                    if (!user?.email) return;
+                                    try {
+                                        const { error } = await resetPassword(user.email);
+                                        if (error) throw error;
+                                        setMessage({ type: 'success', text: 'Password reset link sent to ' + user.email + '. Check your inbox!' });
+                                    } catch (err) {
+                                        setMessage({ type: 'error', text: 'Failed to send reset email: ' + err.message });
+                                    }
+                                    setTimeout(() => setMessage(null), 5000);
+                                }}
+                                className="w-full btn-primary flex items-center justify-center gap-2 text-sm py-3 text-white"
+                            >
+                                <Shield className="w-4 h-4" /> Change Password
                             </button>
                         </div>
                     </div>

@@ -32,9 +32,10 @@ router.put('/profile', requireAuth, async (req, res) => {
             .from('users')
             .upsert({
                 id: req.user.id,
+                email: req.user.email,
                 full_name,
                 updated_at: new Date()
-            })
+            }, { onConflict: 'id' })
             .select()
             .single();
 
