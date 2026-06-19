@@ -77,19 +77,19 @@ export default function ResumeUpload({ embedded = false }) {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className={embedded ? "w-full" : "min-h-screen bg-dark-900 pt-32 pb-24 px-4 relative overflow-hidden"}
+            className={embedded ? "w-full" : "min-h-screen bg-surface-base pt-32 pb-24 px-4 relative overflow-hidden"}
         >
             {!embedded && (
                 <>
                     {/* Background Accents */}
-                    <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary-500/5 blur-[120px] rounded-full animate-float-slow" />
+                    <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand/5 blur-[120px] rounded-full animate-float-slow" />
                     <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-secondary-500/5 blur-[120px] rounded-full animate-float-slow" />
 
                     <div className="max-w-4xl mx-auto relative z-10 mb-16 text-center">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-400 text-xs font-black uppercase tracking-[0.2em] mb-6"
+                            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-glow border border-brand/20 text-brand text-xs font-black uppercase tracking-[0.2em] mb-6"
                         >
                             <Cpu className="w-4 h-4" />
                             AI Resume Analysis
@@ -98,7 +98,7 @@ export default function ResumeUpload({ embedded = false }) {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter leading-none italic uppercase"
+                            className="text-5xl md:text-7xl font-black text-content-base mb-8 tracking-tighter leading-none italic uppercase"
                         >
                             Analyze <span className="gradient-text">Resume</span>
                         </motion.h1>
@@ -106,7 +106,7 @@ export default function ResumeUpload({ embedded = false }) {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="text-xl text-dark-400 font-medium leading-relaxed max-w-2xl mx-auto"
+                            className="text-xl text-content-muted font-medium leading-relaxed max-w-2xl mx-auto"
                         >
                             Upload your resume to receive AI-powered feedback, ATS optimization tips, and actionable improvements.
                         </motion.p>
@@ -126,8 +126,8 @@ export default function ResumeUpload({ embedded = false }) {
                         >
                             <div
                                 onClick={() => fileInputRef.current?.click()}
-                                className={`group relative overflow-hidden card glass border-2 border-dashed p-16 flex flex-col items-center justify-center text-center transition-all cursor-pointer
-                                    ${file ? 'border-primary-500/50 bg-primary-500/5' : 'border-white/10 hover:border-primary-500/30'}`}
+                                className={`group relative overflow-hidden card-bento border-2 border-dashed p-16 flex flex-col items-center justify-center text-center transition-all cursor-pointer
+                                    ${file ? 'border-brand/20 bg-brand/5' : 'border-white/10 hover:border-brand/20'}`}
                             >
                                 <input
                                     type="file"
@@ -138,21 +138,21 @@ export default function ResumeUpload({ embedded = false }) {
                                 />
 
                                 <div className={`w-24 h-24 rounded-[32px] flex items-center justify-center mb-8 transition-all duration-500 shadow-2xl
-                                    ${file ? 'bg-gradient-primary text-white rotate-6 scale-110' : 'bg-dark-800 text-dark-500 group-hover:bg-primary-500/20 group-hover:text-primary-400 group-hover:rotate-3'}`}>
+                                    ${file ? 'bg-brand text-content-base rotate-6 scale-110' : 'bg-surface-card text-content-muted group-hover:bg-brand-glow group-hover:text-brand group-hover:rotate-3'}`}>
                                     {file ? <FileText className="w-12 h-12" /> : <FileUp className="w-12 h-12" />}
                                 </div>
 
                                 {file ? (
                                     <div className="space-y-2">
-                                        <h3 className="text-2xl font-black text-white italic uppercase tracking-tight">{file.name}</h3>
-                                        <div className="inline-block px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-dark-400 font-black uppercase tracking-widest">
+                                        <h3 className="text-2xl font-black text-content-base italic uppercase tracking-tight">{file.name}</h3>
+                                        <div className="inline-block px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-content-muted font-black uppercase tracking-widest">
                                             {(file.size / (1024 * 1024)).toFixed(2)} MB Payload
                                         </div>
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
-                                        <h3 className="text-2xl font-black text-white italic uppercase tracking-tight group-hover:gradient-text transition-all">Upload Resume</h3>
-                                        <p className="text-dark-500 font-bold uppercase tracking-widest text-xs">Drop PDF or click to browse</p>
+                                        <h3 className="text-2xl font-black text-content-base italic uppercase tracking-tight group-hover:gradient-text transition-all">Upload Resume</h3>
+                                        <p className="text-content-muted font-bold uppercase tracking-widest text-xs">Drop PDF or click to browse</p>
                                     </div>
                                 )}
 
@@ -177,7 +177,7 @@ export default function ResumeUpload({ embedded = false }) {
                             <button
                                 onClick={handleUpload}
                                 disabled={!file || uploading}
-                                className="btn-primary w-full py-5 text-white font-black uppercase tracking-[0.3em] text-sm shadow-2xl shadow-primary-500/20 active:scale-[0.98] transition-all disabled:opacity-50 group overflow-hidden"
+                                className="btn-primary w-full py-5 text-content-base font-black uppercase tracking-[0.3em] text-sm shadow-2xl shadow-brand-glow active:scale-[0.98] transition-all disabled:opacity-50 group overflow-hidden"
                             >
                                 <div className="relative z-10 flex items-center justify-center gap-4">
                                     {uploading ? (

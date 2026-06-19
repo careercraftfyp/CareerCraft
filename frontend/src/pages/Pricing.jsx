@@ -15,7 +15,7 @@ const plans = [
     {
         name: 'Professional',
         icon: Zap,
-        price: '$29',
+        price: '$19',
         popular: true,
         description: 'Full-spectrum neural features for serious candidates.',
         features: ['Unlimited AI Resume Scans', 'Tavus Conversational Video (10/mo)', 'Real-time Sentiment Feedback', 'Custom Cover Letter Engine', 'Priority Neural Processing'],
@@ -38,10 +38,10 @@ export default function Pricing() {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="pt-32 pb-24 min-h-screen bg-dark-900 overflow-hidden relative"
+            className="pt-32 pb-24 min-h-screen bg-surface-base overflow-hidden relative"
         >
             {/* Visual Accents */}
-            <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-primary-500/5 blur-[120px] rounded-full animate-float-slow" />
+            <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-brand/5 blur-[120px] rounded-full animate-float-slow" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-secondary-500/5 blur-[120px] rounded-full animate-float-slow" />
 
             <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -58,11 +58,11 @@ export default function Pricing() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter leading-none italic uppercase"
+                        className="text-5xl md:text-7xl font-black text-content-base mb-8 tracking-tighter leading-none italic uppercase"
                     >
                         Neural <span className="gradient-text">Subscription</span>
                     </motion.h1>
-                    <p className="text-xl text-dark-400 font-medium leading-relaxed">
+                    <p className="text-xl text-content-muted font-medium leading-relaxed">
                         Scalable intelligence for every stage of your career cycle.
                         Choose your protocol and deploy your potential.
                     </p>
@@ -75,11 +75,11 @@ export default function Pricing() {
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1 }}
-                            className={`flex flex-col relative card p-10 hover-lift ${plan.popular ? 'border-primary-500/40 bg-dark-800/80 shadow-2xl shadow-primary-500/10 scale-105 z-20' : 'border-dark-700/50'
+                            className={`flex flex-col relative card p-10 hover-lift ${plan.popular ? 'border-brand/20 bg-surface-card shadow-2xl shadow-brand-glow scale-105 z-20' : 'border-stroke/50'
                                 }`}
                         >
                             {plan.popular && (
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-1.5 bg-gradient-primary rounded-full text-[10px] font-black text-white uppercase tracking-[0.2em] shadow-lg shadow-primary-500/50">
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-1.5 bg-brand rounded-full text-[10px] font-black text-content-base uppercase tracking-[0.2em] shadow-lg shadow-brand-glow">
                                     Recommended Protocol
                                 </div>
                             )}
@@ -88,12 +88,12 @@ export default function Pricing() {
                                 <div className={`w-12 h-12 rounded-xl bg-${plan.color === 'dark' ? 'dark-700' : plan.color + '-500'}/20 flex items-center justify-center mb-6`}>
                                     <plan.icon className={`w-6 h-6 text-${plan.color === 'dark' ? 'dark-400' : plan.color + '-400'}`} />
                                 </div>
-                                <h3 className="text-2xl font-black text-white uppercase italic tracking-tight mb-2">{plan.name}</h3>
+                                <h3 className="text-2xl font-black text-content-base uppercase italic tracking-tight mb-2">{plan.name}</h3>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-5xl font-black text-white tracking-tighter">{plan.price}</span>
-                                    <span className="text-dark-500 font-bold uppercase text-[10px] tracking-widest">{plan.price === '$0' ? '' : '/ Month'}</span>
+                                    <span className="text-5xl font-black text-content-base tracking-tighter">{plan.price}</span>
+                                    <span className="text-content-muted font-bold uppercase text-[10px] tracking-widest">{plan.price === '$0' ? '' : '/ Month'}</span>
                                 </div>
-                                <p className="mt-4 text-dark-400 text-sm font-medium leading-relaxed">
+                                <p className="mt-4 text-content-muted text-sm font-medium leading-relaxed">
                                     {plan.description}
                                 </p>
                             </div>
@@ -104,7 +104,7 @@ export default function Pricing() {
                                         <div className="mt-1 w-5 h-5 rounded-full bg-accent-500/10 flex items-center justify-center border border-accent-500/20">
                                             <Check className="w-3 h-3 text-accent-400" />
                                         </div>
-                                        <span className="text-dark-300 font-bold text-xs uppercase tracking-wider leading-none pt-1">
+                                        <span className="text-content-base font-bold text-xs uppercase tracking-wider leading-none pt-1">
                                             {f}
                                         </span>
                                     </div>
@@ -114,8 +114,8 @@ export default function Pricing() {
                             <Link
                                 to={plan.name === 'Enterprise' ? '/contact' : '/signup'}
                                 className={`w-full py-4 rounded-xl font-black uppercase tracking-[0.2em] text-sm text-center transition-all ${plan.popular
-                                    ? 'btn-primary shadow-xl shadow-primary-500/20 text-white'
-                                    : 'bg-dark-900 text-white border border-dark-700 hover:border-dark-500 hover:bg-dark-700'
+                                    ? 'btn-primary shadow-xl shadow-brand-glow text-content-base'
+                                    : 'bg-surface-base text-content-base border border-stroke hover:border-dark-500 hover:bg-surface-hover'
                                     }`}
                             >
                                 {plan.buttonText}
@@ -125,26 +125,26 @@ export default function Pricing() {
                 </div>
 
                 {/* Neural Guarantee */}
-                <div className="mt-24 p-12 glass border-white/5 rounded-[40px] flex flex-col md:flex-row items-center justify-between gap-10">
+                <div className="mt-24 p-12 card-bento border-white/5 rounded-[40px] flex flex-col md:flex-row items-center justify-between gap-10">
                     <div className="flex-1">
                         <div className="flex items-center gap-3 mb-4">
                             <ShieldCheck className="w-8 h-8 text-accent-400" />
-                            <h3 className="text-2xl font-black text-white italic uppercase tracking-tight">The Neural Guarantee</h3>
+                            <h3 className="text-2xl font-black text-content-base italic uppercase tracking-tight">The Neural Guarantee</h3>
                         </div>
-                        <p className="text-dark-400 font-medium text-lg leading-relaxed">
+                        <p className="text-content-muted font-medium text-lg leading-relaxed">
                             We operate at the intersection of privacy and performance. Your career data is encrypted using
                             AES-256 and never sold. We only succeed when your career accelerates.
                         </p>
                     </div>
                     <div className="flex gap-6">
                         <div className="text-center group">
-                            <div className="text-4xl font-black text-white mb-1 group-hover:scale-110 transition-transform">99.9%</div>
-                            <div className="text-[10px] text-dark-500 font-black uppercase tracking-widest">Uptime Optimization</div>
+                            <div className="text-4xl font-black text-content-base mb-1 group-hover:scale-110 transition-transform">99.9%</div>
+                            <div className="text-[10px] text-content-muted font-black uppercase tracking-widest">Uptime Optimization</div>
                         </div>
                         <div className="w-px h-12 bg-white/10" />
                         <div className="text-center group">
-                            <div className="text-4xl font-black text-white mb-1 group-hover:scale-110 transition-transform">100%</div>
-                            <div className="text-[10px] text-dark-500 font-black uppercase tracking-widest">End-to-End Encryption</div>
+                            <div className="text-4xl font-black text-content-base mb-1 group-hover:scale-110 transition-transform">100%</div>
+                            <div className="text-[10px] text-content-muted font-black uppercase tracking-widest">End-to-End Encryption</div>
                         </div>
                     </div>
                 </div>

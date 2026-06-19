@@ -21,7 +21,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-[#0f172a] text-slate-50 font-sans selection:bg-indigo-500/30">
+        <div className="min-h-screen font-sans">
           <Navbar />
           <main>
             <Routes>

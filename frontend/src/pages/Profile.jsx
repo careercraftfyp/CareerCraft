@@ -119,7 +119,7 @@ export default function Profile({ embedded = false }) {
     };
 
     return (
-        <div className={`flex flex-col text-slate-200 font-sans w-full ${!embedded ? 'min-h-screen bg-dark-900 pt-24 pb-20 px-4 sm:px-6 lg:px-10 max-w-7xl mx-auto' : ''}`}>
+        <div className={`flex flex-col text-content-base font-sans w-full ${!embedded ? 'min-h-screen bg-surface-base pt-24 pb-20 px-4 sm:px-6 lg:px-10 max-w-7xl mx-auto' : ''}`}>
             {!embedded && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -128,8 +128,8 @@ export default function Profile({ embedded = false }) {
                 >
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold text-white mb-2">Profile Settings</h1>
-                            <p className="text-dark-400">Manage your account information and preferences</p>
+                            <h1 className="text-3xl font-bold text-content-base mb-2">Profile Settings</h1>
+                            <p className="text-content-muted">Manage your account information and preferences</p>
                         </div>
                     </div>
                 </motion.div>
@@ -141,7 +141,7 @@ export default function Profile({ embedded = false }) {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        className={`mb-6 p-4 rounded-xl border flex items-center gap-3 ${message.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'
+                        className={`mb-6 p-4 rounded-xl border flex items-center gap-3 ${message.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-red-500/10 border-red-500/30 text-red-400'
                             }`}
                     >
                         {message.type === 'success' ? <Check className="w-5 h-5" /> : <X className="w-5 h-5" />}
@@ -159,13 +159,13 @@ export default function Profile({ embedded = false }) {
                     transition={{ delay: 0.1 }}
                     className="lg:col-span-2 space-y-6"
                 >
-                    <div className="card glass p-8 shadow-xl shadow-black/20 border-white/5">
+                    <div className="card-bento p-8 shadow-xl shadow-black/20 border-white/5">
                         <div className="flex items-center justify-between mb-8">
-                            <h2 className="text-xl font-bold text-white">Personal Information</h2>
+                            <h2 className="text-xl font-bold text-content-base">Personal Information</h2>
                             {!isEditing ? (
                                 <button
                                     onClick={() => setIsEditing(true)}
-                                    className="flex items-center gap-2 px-4 py-2 border border-primary-500/30 rounded-lg text-sm bg-primary-500/10 hover:bg-primary-500/20 transition-colors text-primary-400 font-medium"
+                                    className="flex items-center gap-2 px-4 py-2 border border-brand/20 rounded-lg text-sm bg-brand-glow hover:bg-brand-glow transition-colors text-brand font-medium"
                                 >
                                     <Edit2 className="w-4 h-4" /> Edit
                                 </button>
@@ -173,14 +173,14 @@ export default function Profile({ embedded = false }) {
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => setIsEditing(false)}
-                                        className="px-4 py-2 text-sm text-dark-400 hover:text-white transition-colors"
+                                        className="px-4 py-2 text-sm text-content-muted hover:text-content-base transition-colors"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={handleSave}
                                         disabled={loading}
-                                        className="flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 rounded-lg text-sm text-white font-bold transition-all shadow-lg shadow-primary-500/20"
+                                        className="flex items-center gap-2 px-4 py-2 bg-brand hover:bg-brand disabled:opacity-50 rounded-lg text-sm text-content-base font-bold transition-all shadow-lg shadow-brand-glow"
                                     >
                                         <Save className="w-4 h-4" /> {loading ? 'Saving...' : 'Save Changes'}
                                     </button>
@@ -191,9 +191,9 @@ export default function Profile({ embedded = false }) {
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs text-dark-500 font-bold uppercase tracking-wider ml-1">First Name</label>
+                                    <label className="text-xs text-content-muted font-bold uppercase tracking-wider ml-1">First Name</label>
                                     <div className="relative group">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center text-dark-400">
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-surface-hover flex items-center justify-center text-content-muted">
                                             <span className="text-xs">{firstInitial}</span>
                                         </div>
                                         <input
@@ -202,14 +202,14 @@ export default function Profile({ embedded = false }) {
                                             onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                             readOnly={!isEditing}
                                             placeholder="Enter first name"
-                                            className={`input-field !pl-20 transition-all ${isEditing ? 'bg-dark-900 border-primary-500/50 ring-2 ring-primary-500/10' : 'bg-dark-800/80 border-dark-700 text-white cursor-default focus:ring-0'}`}
+                                            className={`input-field !pl-20 transition-all ${isEditing ? 'bg-surface-base border-brand/20 border-2 border-brand/10' : 'bg-surface-card border-stroke text-content-base cursor-default focus:ring-0'}`}
                                         />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs text-dark-500 font-bold uppercase tracking-wider ml-1">Last Name</label>
+                                    <label className="text-xs text-content-muted font-bold uppercase tracking-wider ml-1">Last Name</label>
                                     <div className="relative group">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center text-dark-400">
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-surface-hover flex items-center justify-center text-content-muted">
                                             <span className="text-xs">{lastInitial || firstInitial}</span>
                                         </div>
                                         <input
@@ -218,36 +218,36 @@ export default function Profile({ embedded = false }) {
                                             onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                                             readOnly={!isEditing}
                                             placeholder="Enter last name"
-                                            className={`input-field !pl-20 transition-all ${isEditing ? 'bg-dark-900 border-primary-500/50 ring-2 ring-primary-500/10' : 'bg-dark-800/80 border-dark-700 text-white cursor-default focus:ring-0'}`}
+                                            className={`input-field !pl-20 transition-all ${isEditing ? 'bg-surface-base border-brand/20 border-2 border-brand/10' : 'bg-surface-card border-stroke text-content-base cursor-default focus:ring-0'}`}
                                         />
                                     </div>
                                 </div>
                             </div>
 
                             <div className="space-y-2 opacity-80">
-                                <label className="text-xs text-dark-500 font-bold uppercase tracking-wider ml-1">Email Address (Managed by Auth)</label>
+                                <label className="text-xs text-content-muted font-bold uppercase tracking-wider ml-1">Email Address (Managed by Auth)</label>
                                 <div className="relative group">
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-content-muted">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                                     </div>
                                     <input
                                         type="email"
                                         value={user?.email || ''}
                                         readOnly
-                                        className="input-field !pl-16 bg-dark-900/40 border-dark-800 text-dark-400 cursor-not-allowed focus:ring-0"
+                                        className="input-field !pl-16 bg-surface-base/40 border-stroke text-content-muted cursor-not-allowed focus:ring-0"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs text-dark-500 font-bold uppercase tracking-wider ml-1">Member Since</label>
+                                <label className="text-xs text-content-muted font-bold uppercase tracking-wider ml-1">Member Since</label>
                                 <div className="relative group">
-                                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500" />
+                                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-content-muted" />
                                     <input
                                         type="text"
                                         value={memberSince}
                                         readOnly
-                                        className="input-field pl-12 bg-dark-900/40 border-dark-800 text-dark-400 cursor-not-allowed focus:ring-0"
+                                        className="input-field pl-12 bg-surface-base/40 border-stroke text-content-muted cursor-not-allowed focus:ring-0"
                                     />
                                 </div>
                             </div>
@@ -263,48 +263,48 @@ export default function Profile({ embedded = false }) {
                     className="space-y-6"
                 >
                     {/* Account Statistics */}
-                    <div className="card glass p-6 shadow-xl shadow-black/20 border-white/5">
-                        <h3 className="text-lg font-bold text-white mb-6">Account Statistics</h3>
+                    <div className="card-bento p-6 shadow-xl shadow-black/20 border-white/5">
+                        <h3 className="text-lg font-bold text-content-base mb-6">Account Statistics</h3>
 
                         <div className="space-y-4">
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-dark-300 flex items-center gap-2"><FileText className="w-4 h-4 text-dark-500" /> Resumes Uploaded</span>
-                                <span className="text-white font-bold">{stats.totalResumes}</span>
+                                <span className="text-content-base flex items-center gap-2"><FileText className="w-4 h-4 text-content-muted" /> Resumes Uploaded</span>
+                                <span className="text-content-base font-bold">{stats.totalResumes}</span>
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-dark-300 flex items-center gap-2"><Video className="w-4 h-4 text-dark-500" /> Interviews Completed</span>
-                                <span className="text-white font-bold">{stats.totalInterviews}</span>
+                                <span className="text-content-base flex items-center gap-2"><Video className="w-4 h-4 text-content-muted" /> Interviews Completed</span>
+                                <span className="text-content-base font-bold">{stats.totalInterviews}</span>
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-dark-300 flex items-center gap-2"><Activity className="w-4 h-4 text-dark-500" /> Account Age</span>
-                                <span className="text-white font-bold">{accountAgeDays} days</span>
+                                <span className="text-content-base flex items-center gap-2"><Activity className="w-4 h-4 text-content-muted" /> Account Age</span>
+                                <span className="text-content-base font-bold">{accountAgeDays} days</span>
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-dark-300 flex items-center gap-2"><Target className="w-4 h-4 text-dark-500" /> Last Interview</span>
-                                <span className="text-white font-bold">{lastInterviewStr}</span>
+                                <span className="text-content-base flex items-center gap-2"><Target className="w-4 h-4 text-content-muted" /> Last Interview</span>
+                                <span className="text-content-base font-bold">{lastInterviewStr}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Subscription Status */}
-                    <div className="card glass p-6 shadow-xl shadow-black/20 border-white/5">
-                        <h3 className="text-lg font-bold text-white mb-6">Subscription</h3>
+                    <div className="card-bento p-6 shadow-xl shadow-black/20 border-white/5">
+                        <h3 className="text-lg font-bold text-content-base mb-6">Subscription</h3>
 
                         <div className="space-y-4">
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-dark-300">Current Plan</span>
-                                <span className="text-white font-bold px-2 py-0.5 rounded-full bg-primary-500/10 text-primary-400 border border-primary-500/20">Free</span>
+                                <span className="text-content-base">Current Plan</span>
+                                <span className="text-content-base font-bold px-2 py-0.5 rounded-full bg-brand-glow text-brand border border-brand/20">Free</span>
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-dark-300">Status</span>
-                                <span className="text-emerald-400 font-bold">Active</span>
+                                <span className="text-content-base">Status</span>
+                                <span className="text-emerald-500 font-bold">Active</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Quick Actions */}
-                    <div className="card glass p-6 shadow-xl shadow-black/20 border-white/5">
-                        <h3 className="text-lg font-bold text-white mb-6">Quick Actions</h3>
+                    <div className="card-bento p-6 shadow-xl shadow-black/20 border-white/5">
+                        <h3 className="text-lg font-bold text-content-base mb-6">Quick Actions</h3>
 
                         <div className="space-y-3">
                             <button 
@@ -319,7 +319,7 @@ export default function Profile({ embedded = false }) {
                                     }
                                     setTimeout(() => setMessage(null), 5000);
                                 }}
-                                className="w-full btn-primary flex items-center justify-center gap-2 text-sm py-3 text-white"
+                                className="w-full btn-primary flex items-center justify-center gap-2 text-sm py-3 text-content-base"
                             >
                                 <Shield className="w-4 h-4" /> Change Password
                             </button>

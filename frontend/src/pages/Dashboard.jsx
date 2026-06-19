@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Search, Bell, FileText, Video, Target, Activity,
-    Download, ChevronDown, BarChart2, User, Settings, LogOut, ArrowRight, Brain, Zap, Sparkles
+    Download, ChevronDown, BarChart2, User, Settings, LogOut, ArrowRight, Brain, Zap, Sparkles, Sun, Moon, TrendingUp, TrendingDown, Menu, X
 } from 'lucide-react';
+import Logo from '../components/Logo';
 import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     BarChart, Bar, AreaChart, Area, Cell
@@ -23,21 +24,25 @@ export default function Dashboard() {
     const [activeTab, setActiveTab] = useState('Overview');
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [history, setHistory] = useState([]);
     const [selectedResume, setSelectedResume] = useState(null);
     const [viewMode, setViewMode] = useState('overview'); // 'overview' or 'history'
+    
     const profileRef = useRef(null);
     const notificationsRef = useRef(null);
+    const mobileMenuRef = useRef(null);
 
+    const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
     const [liveStats, setLiveStats] = useState(null);
     const [loadingStats, setLoadingStats] = useState(true);
+    
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (profileRef.current && !profileRef.current.contains(event.target)) {
-                setIsProfileOpen(false);
-            }
-            if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
-                setIsNotificationsOpen(false);
+            if (profileRef.current && !profileRef.current.contains(event.target)) setIsProfileOpen(false);
+            if (notificationsRef.current && !notificationsRef.current.contains(event.target)) setIsNotificationsOpen(false);
+            if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target) && window.innerWidth < 1024) {
+                // Keep menu open logic primarily handled by overlay
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -49,7 +54,6 @@ export default function Dashboard() {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
                 const token = session?.access_token;
-
                 const res = await fetch(`${API_URL}/dashboard/stats`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -62,34 +66,24 @@ export default function Dashboard() {
                 setLoadingStats(false);
             }
         };
-
-        if (activeTab === 'Overview') {
-            fetchStats();
-        }
-
-        if (activeTab === 'Resume Analyzer' && history.length === 0) {
-            fetchHistory();
-        }
-
-        // Also refetch history if we navigate to Overview and want to see history (optional, dashboard auto-updates)
+        if (activeTab === 'Overview') fetchStats();
+        if (activeTab === 'Resume Analyzer' && history.length === 0) fetchHistory();
     }, [activeTab]);
 
     const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
     const userInitial = userName.charAt(0).toUpperCase();
 
     const tabs = [
-        { name: 'Overview', icon: BarChart2 },
-        { name: 'Resume Analyzer', icon: FileText },
-        { name: 'Interview Prep', icon: Video },
-        { name: 'Training Hub', icon: Zap },
-        { name: 'Profile', icon: User }
+        { name: 'Overview', icon: BarChart2, description: 'Stats & Progression' },
+        { name: 'Resume Analyzer', icon: FileText, description: 'ATS Optimization' },
+        { name: 'Interview Prep', icon: Video, description: 'AI Mock Sessions' },
+        { name: 'Training Hub', icon: Zap, description: 'Skill Acquisition' },
     ];
 
     const fetchHistory = async () => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
-
             const res = await fetch(`${API_URL}/resumes`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -101,60 +95,19 @@ export default function Dashboard() {
         }
     };
 
-    const renderHeader = () => (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-            <div>
-                <motion.h2
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="text-3xl font-bold text-white mb-1"
-                >
-                    {activeTab === 'Overview' ? (
-                        <>Welcome back, <span className="gradient-text">{userName}</span></>
-                    ) : activeTab}
-                </motion.h2>
-                <p className="text-sm text-dark-400">
-                    {activeTab === 'Overview' && 'Your career preparation is trending upwards'}
-                    {activeTab === 'Resume Analyzer' && 'Upload and optimize your resume for ATS systems'}
-                    {activeTab === 'Interview Prep' && 'Practice and review your AI mock interviews'}
-                    {activeTab === 'Training Hub' && 'Enhance your skills with targeted training modules'}
-                    {activeTab === 'Profile' && 'Manage your account information and preferences'}
-                </p>
-            </div>
-
-            {activeTab === 'Overview' && (
-                <div className="flex items-center gap-3">
-                    <button 
-                        onClick={() => alert("Date range filtering is coming in the next update!")}
-                        className="flex items-center gap-2 px-4 py-2 border border-dark-700 rounded-lg text-sm bg-dark-800/50 hover:bg-dark-700 transition-colors text-white"
-                    >
-                        Last Month <ChevronDown className="w-4 h-4" />
-                    </button>
-                    <button 
-                        onClick={() => window.print()}
-                        className="btn-primary flex items-center gap-2 text-sm py-2 px-4 text-white"
-                    >
-                        <Download className="w-4 h-4" /> <span>Download Report</span>
-                    </button>
-                </div>
-            )}
-        </div>
-    );
-
     const renderHistory = () => (
         <div className="space-y-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-8">
                 <button
                     onClick={() => {
                         setViewMode('overview');
                         setSelectedResume(null);
                         setActiveTab('Overview');
                     }}
-                    className="flex items-center gap-2 text-dark-400 hover:text-white transition-colors font-bold uppercase tracking-widest text-[10px] bg-dark-800 px-4 py-2 rounded-xl border border-dark-700"
+                    className="flex items-center gap-2 text-content-muted hover:text-content-base transition-colors font-bold uppercase tracking-widest text-[10px] bg-surface-base px-4 py-2 rounded-xl border border-stroke shadow-sm"
                 >
-                    <ArrowRight className="w-4 h-4 rotate-180" /> Back to Dashboard
+                    <ArrowRight className="w-4 h-4 rotate-180" /> Back to Overview
                 </button>
-                <h3 className="text-xl font-black text-white italic uppercase tracking-tight">Resume <span className="gradient-text">History</span></h3>
             </div>
 
             {selectedResume ? (
@@ -167,38 +120,40 @@ export default function Dashboard() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             onClick={() => setSelectedResume(resume)}
-                            className="card glass p-6 cursor-pointer hover:border-primary-500/30 group transition-all relative overflow-hidden"
+                            className="card-bento p-6 cursor-pointer group relative overflow-hidden flex flex-col h-full"
                         >
-                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                <FileText className="w-16 h-16" />
+                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <FileText className="w-24 h-24 text-content-base" />
                             </div>
-                            <div className="flex items-start justify-between mb-6 relative z-10">
-                                <div className="p-3 rounded-2xl bg-primary-500/10 text-primary-400 border border-primary-500/20 group-hover:scale-110 transition-transform">
+                            <div className="flex items-start justify-between mb-8 relative z-10">
+                                <div className="p-3 rounded-2xl bg-brand-glow text-brand group-hover:-translate-y-1 transition-transform">
                                     <FileText className="w-6 h-6" />
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-2xl font-black text-white italic tracking-tighter">{resume.analysis.overall_score}</div>
-                                    <div className="text-[8px] text-dark-500 font-black uppercase tracking-[0.2em]">ATS Score</div>
+                                    <div className="text-3xl font-black text-content-base italic tracking-tighter">{resume.analysis.overall_score}</div>
+                                    <div className="text-[10px] text-content-muted font-bold uppercase tracking-[0.2em] mt-1">ATS Score</div>
                                 </div>
                             </div>
-                            <h4 className="font-bold text-white truncate mb-1 group-hover:text-primary-400 transition-colors uppercase tracking-tight">{resume.file_name}</h4>
-                            <p className="text-[10px] text-dark-400 font-black uppercase tracking-widest mb-4">
-                                Analyzed on {new Date(resume.created_at).toLocaleDateString()}
-                            </p>
-                            <div className="flex items-center justify-between pt-4 border-t border-white/5 relative z-10">
-                                <span className="px-2 py-1 rounded bg-dark-900/50 text-[8px] text-primary-400 font-black uppercase tracking-[0.2em] border border-primary-500/20">
+                            <div className="mb-auto">
+                                <h4 className="font-bold text-content-base truncate mb-1 group-hover:text-brand transition-colors text-lg tracking-tight">{resume.file_name}</h4>
+                                <p className="text-[10px] text-content-muted font-bold uppercase tracking-widest mb-4">
+                                    Analyzed on {new Date(resume.created_at).toLocaleDateString()}
+                                </p>
+                            </div>
+                            <div className="flex items-center justify-between pt-4 border-t border-stroke relative z-10 mt-6">
+                                <span className="px-3 py-1.5 rounded-lg bg-surface-hover text-[10px] text-brand font-bold uppercase tracking-[0.1em] border border-stroke">
                                     {resume.analysis.field_of_expertise}
                                 </span>
-                                <ArrowRight className="w-4 h-4 text-dark-500 group-hover:translate-x-1 group-hover:text-primary-400 transition-all" />
+                                <ArrowRight className="w-5 h-5 text-content-muted group-hover:translate-x-1 group-hover:text-brand transition-all" />
                             </div>
                         </motion.div>
                     ))}
                     {history.length === 0 && (
-                        <div className="col-span-full py-32 text-center card glass border-dashed flex flex-col items-center justify-center gap-4">
-                            <div className="w-16 h-16 rounded-3xl bg-dark-800 flex items-center justify-center text-dark-600">
+                        <div className="col-span-full py-32 text-center card-bento border-dashed flex flex-col items-center justify-center gap-4 bg-transparent border-2 border-stroke">
+                            <div className="w-16 h-16 rounded-3xl bg-surface-hover flex items-center justify-center text-content-muted border border-stroke">
                                 <FileText className="w-8 h-8" />
                             </div>
-                            <p className="text-dark-400 font-black tracking-[0.2em] uppercase text-xs">No resumes archived in the neural core</p>
+                            <p className="text-content-muted font-bold tracking-[0.2em] uppercase text-xs">No resumes archived in the neural core</p>
                         </div>
                     )}
                 </div>
@@ -207,185 +162,170 @@ export default function Dashboard() {
     );
 
     const renderOverview = () => {
-        const stats = [
-            { label: 'Total Resumes', value: liveStats?.totalResumes ?? '0', icon: FileText, color: 'text-blue-400', clickable: true, growth: liveStats?.growth?.resumes ?? 0 },
-            { label: 'Total Interviews', value: liveStats?.totalInterviews ?? '0', icon: Video, color: 'text-emerald-400', growth: liveStats?.growth?.interviews ?? 0 },
-            { label: 'Avg ATS Score', value: liveStats?.avgAtsScore ?? '0/100', icon: Target, color: 'text-amber-400', growth: liveStats?.growth?.atsScore ?? 0, growthSuffix: '%' },
-            { label: 'Training ROI', value: liveStats?.trainingProgress ?? '0%', icon: Zap, color: 'text-purple-400', clickable: true, tab: 'Training Hub', growth: liveStats?.growth?.trainingProgress ?? 0, growthSuffix: '%' }
-        ];
+        const resumesGrowth = liveStats?.growth?.resumes ?? 0;
+        const atsGrowth = liveStats?.growth?.atsScore ?? 0;
 
         return (
-        <div className="space-y-8">
+        <div className="space-y-6">
             {viewMode === 'history' ? renderHistory() : (
-                <>
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                        {stats.map((stat, index) => {
-                            const Icon = stat.icon;
-                            return (
-                                <motion.div
-                                    key={index}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.1 }}
-                                    onClick={() => {
-                                        if (stat.clickable) {
-                                            if (stat.tab === 'Training Hub') {
-                                                setActiveTab('Training Hub');
-                                            } else {
-                                                fetchHistory();
-                                                setViewMode('history');
-                                            }
-                                        }
-                                    }}
-                                    className={`card flex flex-col shadow-lg shadow-black/20 ${stat.clickable ? 'cursor-pointer hover:border-primary-500/50 hover:bg-primary-500/5 group' : ''}`}
-                                >
-                                    <div className="flex justify-between items-start mb-4">
-                                        <p className="text-sm font-medium text-dark-400">{stat.label}</p>
-                                        <div className={`p-2 rounded-lg bg-dark-900/50 ${stat.color} ${stat.clickable ? 'group-hover:scale-110 transition-transform' : ''}`}>
-                                            <Icon className="w-5 h-5" />
-                                        </div>
-                                    </div>
-                                    <h3 className="text-3xl font-bold text-white tracking-tight">{stat.value}</h3>
-                                    <div className={`mt-2 text-[10px] flex items-center gap-1 font-bold ${stat.growth >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                        <span>{stat.growth >= 0 ? '↑' : '↓'} {Math.abs(stat.growth)}{stat.growthSuffix || ''}</span>
-                                        <span className="text-dark-500 font-medium tracking-normal">from last week</span>
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 auto-rows-max">
+                    {/* Welcome Hero - Span 8 */}
+                    <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} className="lg:col-span-8 card-bento bg-surface-card p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-glow blur-[100px] rounded-full pointer-events-none -mt-32 -mr-32" />
+                        <div className="flex-1 relative z-10">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand-glow text-brand font-bold text-[10px] uppercase tracking-widest mb-4 border border-brand/20">
+                                <Zap className="w-3 h-3 fill-current" /> System Online
+                            </div>
+                            <h2 className="text-3xl md:text-4xl font-black text-content-base mb-3 tracking-tight">
+                                Welcome back,<br/><span className="text-brand">{userName}</span>
+                            </h2>
+                            <p className="text-content-muted font-medium mb-8 max-w-md leading-relaxed text-sm">
+                                Your neural training is calculating at peak efficiency. You are fully on track to dominate the upcoming technical evaluations.
+                            </p>
+                            <button onClick={() => setActiveTab('Training Hub')} className="btn-primary shadow-lg shadow-brand-glow hover:-translate-y-1 w-full sm:w-auto">
+                                Launch Training Sequence <ArrowRight className="w-4 h-4 ml-1" />
+                            </button>
+                        </div>
+                        <div className="relative w-40 h-40 shrink-0 z-10 flex items-center justify-center">
+                            <div className="absolute inset-0 rounded-full border-[10px] border-surface-hover" />
+                            <svg className="w-full h-full -rotate-90">
+                                <circle
+                                    cx="80" cy="80" r="70"
+                                    fill="transparent" stroke="var(--brand)"
+                                    strokeWidth="10" strokeDasharray={440}
+                                    strokeDashoffset={440 - (440 * parseInt(liveStats?.trainingProgress || 0)) / 100}
+                                    className="transition-all duration-1000 ease-out" strokeLinecap="round"
+                                />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className="text-3xl font-black text-content-base italic">{liveStats?.trainingProgress || '0%'}</span>
+                                <span className="text-[9px] font-bold text-content-muted uppercase tracking-widest">Mastery</span>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Quick Stat 1 - Total Resumes - Span 4 */}
+                    <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{delay: 0.1}} 
+                        onClick={() => { fetchHistory(); setViewMode('history'); }} 
+                        className="lg:col-span-4 card-bento p-6 flex flex-col bg-surface-card hover:-translate-y-1 cursor-pointer group relative overflow-hidden"
+                    >
+                        <div className="flex justify-between items-start mb-auto relative z-10">
+                            <div className="p-3 bg-blue-500/10 text-blue-500 rounded-xl group-hover:scale-110 transition-transform border border-blue-500/20">
+                                <FileText className="w-6 h-6" />
+                            </div>
+                            <div className={`flex items-center gap-1 font-bold text-sm bg-surface-base px-2 py-1 rounded-lg border border-stroke ${resumesGrowth >= 0 ? 'text-brand' : 'text-red-500'}`}>
+                                {resumesGrowth >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                                <span>{Math.abs(resumesGrowth)}</span>
+                            </div>
+                        </div>
+                        <div className="mt-8 relative z-10">
+                            <h3 className="text-5xl font-black text-content-base tracking-tighter mb-1">{liveStats?.totalResumes ?? '0'}</h3>
+                            <p className="text-[10px] font-bold text-content-muted uppercase tracking-[0.2em]">Archived Resumes</p>
+                        </div>
+                        <div className="absolute -bottom-4 -right-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
+                            <FileText className="w-32 h-32 text-content-base" />
+                        </div>
+                    </motion.div>
+
+                    {/* Chart 1 - ATS Trend - Span 7 */}
+                    <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{delay: 0.2}} className="lg:col-span-7 card-bento p-6 flex flex-col bg-surface-card min-h-[350px]">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-3">
+                                <Activity className="w-5 h-5 text-brand" />
+                                <h3 className="font-bold text-lg text-content-base tracking-tight">ATS Score Progression</h3>
+                            </div>
+                            <div className={`flex items-center gap-1.5 font-bold text-xs bg-brand-glow text-brand px-3 py-1.5 rounded-lg border border-brand/20`}>
+                                {atsGrowth >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                                <span>{Math.abs(atsGrowth)}% vs Last Period</span>
+                            </div>
+                        </div>
+                        {(!liveStats?.atsTrend || liveStats.atsTrend.length === 0) ? (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-surface-base rounded-xl border border-dashed border-stroke">
+                                <FileText className="w-10 h-10 text-content-muted mb-3" />
+                                <p className="text-content-base font-medium text-sm leading-relaxed">Submit a resume to the <span className="text-brand">Analyzer</span><br />to start tracking progression.</p>
+                            </div>
+                        ) : (
+                            <div className="flex-1 w-full h-full min-h-[250px] -ml-4">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={liveStats?.atsTrend} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                        <defs>
+                                            <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="var(--brand)" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="var(--brand)" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="4 4" stroke="var(--stroke)" vertical={false} />
+                                        <XAxis dataKey="name" stroke="var(--content-muted)" fontSize={11} tickLine={false} axisLine={false} dy={10} fontWeight="bold" />
+                                        <YAxis stroke="var(--content-muted)" fontSize={11} tickLine={false} axisLine={false} dx={-10} domain={[0, 100]} fontWeight="bold" />
+                                        <Tooltip contentStyle={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--stroke)', borderRadius: '12px', color: 'var(--content-base)', fontWeight: 'bold' }} itemStyle={{ color: 'var(--brand)' }} />
+                                        <Area type="monotone" dataKey="score" stroke="var(--brand)" fillOpacity={1} fill="url(#colorScore)" strokeWidth={3} />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
+                    </motion.div>
+
+                    {/* Small Stat Stack - Span 5 */}
+                    <div className="lg:col-span-5 flex flex-col gap-6">
+                        {/* Avg ATS */}
+                        <motion.div initial={{opacity:0, x:20}} animate={{opacity:1, x:0}} transition={{delay: 0.3}} className="card-bento p-6 flex-1 bg-surface-card flex items-center justify-between group">
+                            <div>
+                                <div className="flex items-center gap-2 text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20 font-bold uppercase tracking-widest text-[10px] mb-4 w-fit">
+                                    <Target className="w-3 h-3" /> Average Score
+                                </div>
+                                <h3 className="text-4xl font-black text-content-base tracking-tighter">{liveStats?.avgAtsScore ?? '0'}<span className="text-lg text-content-muted ml-0.5">/100</span></h3>
+                            </div>
+                            <div className="w-16 h-16 rounded-full border-[6px] border-amber-500/20 flex items-center justify-center">
+                                <Target className="w-6 h-6 text-amber-500" />
+                            </div>
+                        </motion.div>
+                        
+                        {/* Total Interviews */}
+                        <motion.div initial={{opacity:0, x:20}} animate={{opacity:1, x:0}} transition={{delay: 0.4}} className="card-bento p-6 flex-1 bg-surface-card flex items-center justify-between group">
+                            <div>
+                                <div className="flex items-center gap-2 text-indigo-500 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20 font-bold uppercase tracking-widest text-[10px] mb-4 w-fit">
+                                    <Video className="w-3 h-3" /> Sessions
+                                </div>
+                                <h3 className="text-4xl font-black text-content-base tracking-tighter">{liveStats?.totalInterviews ?? '0'}</h3>
+                            </div>
+                            <div className="w-16 h-16 rounded-full border-[6px] border-indigo-500/20 flex items-center justify-center">
+                                <Video className="w-6 h-6 text-indigo-500" />
+                            </div>
+                        </motion.div>
                     </div>
 
-                    {/* Charts Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                        {/* ATS Trend */}
-                        <div className="card min-h-[400px] flex flex-col shadow-lg shadow-black/20">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-2">
-                                    <Activity className="w-5 h-5 text-primary-400" />
-                                    <h3 className="font-semibold text-lg text-white">ATS Score Trend</h3>
-                                </div>
-                            </div>
-                            {(!liveStats?.atsTrend || liveStats.atsTrend.length === 0) ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center p-6 m-4 ml-0 bg-dark-800/20 rounded-2xl border border-dashed border-dark-700">
-                                    <FileText className="w-10 h-10 text-dark-500 mb-3" />
-                                    <p className="text-dark-300 font-medium text-sm leading-relaxed">Submit a resume to the <span className="text-primary-400">Analyzer</span><br />to start tracking your ATS progression scores here.</p>
-                                </div>
-                            ) : (
-                                <div className="flex-1 w-full h-full min-h-[300px] -ml-4">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={liveStats?.atsTrend} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                                            <defs>
-                                                <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3} />
-                                                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
-                                            <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                                            <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dx={-10} domain={[0, 100]} />
-                                            <Tooltip
-                                                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#fff' }}
-                                                itemStyle={{ color: '#0ea5e9' }}
-                                            />
-                                            <Area type="monotone" dataKey="score" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorScore)" strokeWidth={3} />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Interview Scores */}
-                        <div className="card min-h-[400px] flex flex-col shadow-lg shadow-black/20">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-2">
-                                    <Target className="w-5 h-5 text-fuchsia-400" />
-                                    <h3 className="font-semibold text-lg text-white">Interview Readiness</h3>
-                                </div>
-                            </div>
-                            {(!liveStats?.interviewScores || liveStats.interviewScores.length === 0) ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center p-6 m-4 ml-0 bg-dark-800/20 rounded-2xl border border-dashed border-dark-700">
-                                    <Video className="w-10 h-10 text-dark-500 mb-3" />
-                                    <p className="text-dark-300 font-medium text-sm leading-relaxed">Launch an <span className="text-fuchsia-400">AI Mock Interview</span><br />to unlock your comprehensive soft & technical skill metrics.</p>
-                                </div>
-                            ) : (
-                                <div className="flex-1 w-full h-full min-h-[300px] -ml-4">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={liveStats?.interviewScores} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
-                                            <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                                            <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dx={-10} />
-                                            <Tooltip
-                                                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)' }}
-                                                cursor={{ fill: '#334155', opacity: 0.2 }}
-                                            />
-                                            <Bar dataKey="score" fill="#d946ef" radius={[6, 6, 0, 0]} maxBarSize={40}>
-                                                {liveStats?.interviewScores?.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={['#d946ef', '#a855f7', '#8b5cf6', '#6366f1'][index % 4]} />
-                                                ))}
-                                            </Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Training Progress (New) */}
-                        <div className="lg:col-span-2 card p-8 flex flex-col sm:flex-row items-center gap-12 bg-gradient-to-br from-dark-800 to-dark-900 border-primary-500/10">
-                            <div className="flex-1 space-y-6">
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-primary-400 font-black uppercase tracking-[0.2em] text-[10px]">
-                                        <Zap className="w-3 h-3 fill-current" /> Mastery Level
-                                    </div>
-                                    <h3 className="text-3xl font-black text-white italic uppercase tracking-tight">Training <span className="gradient-text">Efficiency</span></h3>
-                                    <p className="text-dark-400 text-sm font-medium max-w-md">
-                                        Your neural training progress is calculated based on completed practice sessions and AI-identified skill acquisitions.
-                                    </p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-4 rounded-2xl bg-dark-900/50 border border-dark-800">
-                                        <p className="text-[10px] font-black text-dark-500 uppercase tracking-widest mb-1">Drills Completed</p>
-                                        <p className="text-2xl font-black text-white italic">{liveStats?.completedPractice || 0}<span className="text-dark-600 text-sm ml-1">/ {liveStats?.totalPractice || 0}</span></p>
-                                    </div>
-                                    <div className="p-4 rounded-2xl bg-dark-900/50 border border-dark-800">
-                                        <p className="text-[10px] font-black text-dark-500 uppercase tracking-widest mb-1">Target Score</p>
-                                        <p className="text-2xl font-black text-primary-400 italic">95%</p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => setActiveTab('Training Hub')}
-                                    className="btn-primary w-full sm:w-auto"
-                                >
-                                    Launch Training Core
-                                </button>
-                            </div>
-                            <div className="relative w-48 h-48 flex items-center justify-center">
-                                <div className="absolute inset-0 rounded-full border-[12px] border-dark-800" />
-                                <svg className="w-full h-full -rotate-90">
-                                    <circle
-                                        cx="96"
-                                        cy="96"
-                                        r="84"
-                                        fill="transparent"
-                                        stroke="currentColor"
-                                        strokeWidth="12"
-                                        strokeDasharray={527}
-                                        strokeDashoffset={527 - (527 * parseInt(liveStats?.trainingProgress || 0)) / 100}
-                                        className="text-primary-500 transition-all duration-1000 ease-out"
-                                        strokeLinecap="round"
-                                    />
-                                </svg>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-4xl font-black text-white italic">{liveStats?.trainingProgress || '0%'}</span>
-                                    <span className="text-[10px] font-black text-dark-500 uppercase tracking-widest">Growth</span>
-                                </div>
-                                <div className="absolute -top-2 -right-2 p-3 bg-primary-500 rounded-2xl shadow-xl shadow-primary-500/20 animate-bounce">
-                                    <Sparkles className="w-5 h-5 text-white" />
-                                </div>
+                    {/* Interview Overview - Span 12 */}
+                    <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{delay: 0.5}} className="lg:col-span-12 card-bento p-6 bg-surface-card h-[350px] flex flex-col">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-3">
+                                <Brain className="w-5 h-5 text-indigo-500" />
+                                <h3 className="font-bold text-lg text-content-base tracking-tight">Interview Readiness Metrics</h3>
                             </div>
                         </div>
-                    </div>
-                </>
+                        {(!liveStats?.interviewScores || liveStats.interviewScores.length === 0) ? (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-surface-base rounded-xl border border-dashed border-stroke">
+                                <Video className="w-10 h-10 text-content-muted mb-3" />
+                                <p className="text-content-base font-medium text-sm leading-relaxed">Launch an <span className="text-indigo-500">AI Mock Interview</span><br />to unlock comprehensive skill dimensions.</p>
+                            </div>
+                        ) : (
+                            <div className="flex-1 w-full h-full min-h-[200px] mt-4 -ml-4">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={liveStats?.interviewScores} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                        <CartesianGrid strokeDasharray="4 4" stroke="var(--stroke)" vertical={false} />
+                                        <XAxis dataKey="name" stroke="var(--content-muted)" fontSize={11} tickLine={false} axisLine={false} dy={10} fontWeight="bold" />
+                                        <YAxis stroke="var(--content-muted)" fontSize={11} tickLine={false} axisLine={false} dx={-10} fontWeight="bold" />
+                                        <Tooltip cursor={{ fill: 'var(--surface-hover)', opacity: 0.8 }} contentStyle={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--stroke)', borderRadius: '12px', fontWeight: 'bold' }} />
+                                        <Bar dataKey="score" fill="var(--brand)" radius={[4, 4, 0, 0]} maxBarSize={50}>
+                                            {liveStats?.interviewScores?.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={['var(--brand)', '#8b5cf6', '#3b82f6', '#f59e0b'][index % 4]} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
             )}
         </div>
         );
@@ -399,8 +339,8 @@ export default function Dashboard() {
                 return (
                     <div className="space-y-12 pb-16">
                         <ResumeUpload embedded={true} />
-                        <div className="border-t border-dark-800 pt-16 mt-8">
-                            <div className="max-w-5xl mx-auto px-4">
+                        <div className="border-t border-stroke pt-16 mt-8">
+                            <div className="max-w-5xl mx-auto">
                                 {renderHistory()}
                             </div>
                         </div>
@@ -408,187 +348,67 @@ export default function Dashboard() {
                 );
             case 'Interview Prep':
                 return (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-6"
-                    >
-                        {/* Launch Card */}
-                        <div className="relative overflow-hidden bg-dark-800 border border-primary-500/20 rounded-3xl p-10 glass shadow-2xl shadow-black/40">
-                            <div className="absolute inset-0 bg-gradient-mesh opacity-20" />
-                            <div className="relative">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="p-4 bg-primary-500/20 rounded-2xl border border-primary-500/30">
-                                        <Video className="w-8 h-8 text-primary-400" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-2xl font-bold text-white">AI Mock Interview</h3>
-                                        <p className="text-primary-300 text-sm font-medium">Powered by Tavus Conversational AI</p>
-                                    </div>
-                                </div>
-                                <p className="text-dark-300 mb-10 max-w-xl text-lg leading-relaxed">
-                                    Practice with a lifelike AI interviewer that adapts to your target role and company.
-                                    Get real-time verbal feedback and build interview confidence.
-                                </p>
-                                <div className="flex flex-col sm:flex-row gap-4">
-                                    <Link
-                                        to="/interview"
-                                        className="btn-primary inline-flex items-center justify-center gap-2 text-white px-8"
-                                    >
-                                        <Video className="w-5 h-5" />
-                                        Launch Session
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-5xl mx-auto">
+                        <div className="card-bento p-10 bg-brand text-white overflow-hidden relative border-none">
+                            <div className="absolute inset-0 bg-black/10 mix-blend-overlay" />
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 blur-[80px] rounded-full pointer-events-none -mt-20 -mr-20" />
+                            <div className="relative z-10 w-full flex flex-col md:flex-row md:items-center justify-between gap-8 text-center md:text-left">
+                                <div className="flex-1">
+                                    <h3 className="text-4xl font-black tracking-tight mb-4 text-white">AI Mock Interview<br/><span className="text-emerald-200">Protocol</span></h3>
+                                    <p className="text-emerald-50 mb-8 max-w-lg text-lg font-medium leading-relaxed">
+                                        Practice with a lifelike AI interviewer that adapts to your target role and company. Get real-time verbal feedback.
+                                    </p>
+                                    <Link to="/interview" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-emerald-600 rounded-xl font-black hover:scale-105 transition-transform shadow-xl w-full md:w-auto text-lg">
+                                        <Video className="w-5 h-5" /> Initialize Session
                                     </Link>
-                                    <button 
-                                        onClick={() => alert('Interview session history is coming in the next update!')}
-                                        className="btn-secondary px-8"
-                                    >
-                                        View Past Sessions
-                                    </button>
+                                </div>
+                                <div className="hidden md:flex p-8 bg-white/10 rounded-3xl backdrop-blur-md border border-white/20">
+                                    <Brain className="w-32 h-32 text-white/90" />
                                 </div>
                             </div>
                         </div>
-
-                        {/* Feature Highlights */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                             {[
-                                { emoji: '🎭', title: 'Lifelike AI Interviewer', desc: 'Powered by Tavus conversational video' },
-                                { emoji: '🧠', title: 'Role-Specific Questions', desc: 'Interview questions tailored to your target role' },
-                                { emoji: '⏱️', title: 'Up to 20 minutes', desc: 'Full-length sessions for comprehensive practice' },
+                                { emoji: '🎭', title: 'Lifelike AI Interviewer', desc: 'Real-time conversational response using advanced speech AI' },
+                                { emoji: '🧠', title: 'Role-Specific Questions', desc: 'Dynamic algorithmic generation tailored to your precise target' },
+                                { emoji: '⏱️', title: 'Extensive Analysis', desc: 'Comprehensive soft and technical skill breakdown post-session' },
                             ].map(f => (
-                                <div key={f.title} className="card p-6 border-dark-700/50 hover:border-primary-500/30 transition-all shadow-md shadow-black/10">
-                                    <div className="text-4xl mb-4">{f.emoji}</div>
-                                    <h4 className="text-white font-bold text-base mb-2">{f.title}</h4>
-                                    <p className="text-dark-400 text-sm leading-relaxed">{f.desc}</p>
+                                <div key={f.title} className="card-bento p-8 bg-surface-card hover:-translate-y-1 transition-transform">
+                                    <div className="text-5xl mb-6 bg-surface-base w-20 h-20 rounded-2xl flex items-center justify-center border border-stroke shadow-sm">{f.emoji}</div>
+                                    <h4 className="text-content-base font-black text-lg mb-2 tracking-tight">{f.title}</h4>
+                                    <p className="text-content-muted font-medium text-sm leading-relaxed">{f.desc}</p>
                                 </div>
                             ))}
                         </div>
                     </motion.div>
                 );
             case 'Training Hub':
-                return (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                    >
-                        <PracticeHub />
-                    </motion.div>
-                );
+                return <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}><PracticeHub /></motion.div>;
             case 'Profile':
-                return (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                    >
-                        <Profile embedded={true} />
-                    </motion.div>
-                );
+                return <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto"><Profile embedded={true} /></motion.div>;
             default:
                 return renderOverview();
         }
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-dark-900 text-slate-200 font-sans">
-            {/* Top Navigation Bar */}
-            <header className="flex items-center justify-between px-8 py-5 border-b border-dark-800 bg-dark-900/80 backdrop-blur-xl sticky top-0 z-40">
-                <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity group">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center text-white font-black text-xl transition-transform group-hover:scale-110 shadow-lg shadow-primary-500/20">
-                        C
-                    </div>
-                    <div>
-                        <h1 className="font-black text-xl leading-none tracking-tight text-white uppercase italic">CareerCraft</h1>
-                        <p className="text-[10px] text-dark-500 font-bold uppercase tracking-[0.2em] mt-1">AI Intelligence</p>
-                    </div>
-                </Link>
-
-                <div className="flex items-center gap-8">
-
-                    <div className="flex items-center gap-4">
-                        <div className="relative" ref={notificationsRef}>
-                            <button
-                                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                                className="relative text-dark-400 hover:text-white transition-all p-2.5 rounded-xl hover:bg-dark-800 border border-transparent hover:border-dark-700"
-                            >
-                                <Bell className="w-5 h-5" />
-                                {/* Optional: You can keep or remove the pulse ping dot if you want to pretend there's a notification, or hide it when clicked */}
-                            </button>
-                            <AnimatePresence>
-                                {isNotificationsOpen && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="absolute right-0 mt-3 w-64 bg-dark-800 border border-dark-700/50 rounded-2xl shadow-2xl overflow-hidden py-6 z-50 flex flex-col items-center justify-center text-center"
-                                    >
-                                        <div className="w-12 h-12 rounded-full bg-dark-900/50 border border-dark-700/50 flex items-center justify-center mb-3">
-                                            <Bell className="w-5 h-5 text-dark-500" />
-                                        </div>
-                                        <p className="text-dark-300 font-bold text-sm">No new notifications</p>
-                                        <p className="text-dark-500 font-medium text-xs mt-1">You're all caught up!</p>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+        <div className="flex h-screen overflow-hidden bg-surface-base text-content-base font-sans transition-colors duration-300">
+            {/* Desktop Sidebar (Push Rail) */}
+            <aside className="group/sidebar w-[80px] hover:w-72 transition-all duration-300 ease-in-out border-r border-stroke bg-surface-card hidden lg:flex flex-col z-20 shrink-0 shadow-sm relative overflow-hidden">
+                <div className="h-[76px] flex items-center px-5 border-b border-stroke gap-4 shrink-0 bg-surface-card sticky top-0">
+                    <Link to="/" className="flex items-center gap-4 w-[240px] shrink-0">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg shadow-brand-glow shrink-0">
+                            <Logo className="w-full h-full" />
                         </div>
-
-                        <div className="h-8 w-px bg-dark-700 mx-2" />
-
-                        <div className="flex items-center gap-4 shrink-0">
-                            <div className="text-right hidden sm:block max-w-[150px]">
-                                <p className="font-bold text-sm text-white truncate">{userName}</p>
-                                <p className="text-[10px] text-dark-400 font-black uppercase tracking-wider">Free Plan</p>
-                            </div>
-                            <div className="relative" ref={profileRef}>
-                                <div
-                                    onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                    className="w-11 h-11 rounded-2xl bg-gradient-primary flex items-center justify-center text-white font-black text-lg shadow-xl shadow-primary-500/10 cursor-pointer hover:scale-105 transition-transform">
-                                    {userInitial}
-                                </div>
-                                <AnimatePresence>
-                                    {isProfileOpen && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            transition={{ duration: 0.2 }}
-                                            className="absolute right-0 mt-3 w-48 bg-dark-800 border border-dark-700/50 rounded-2xl shadow-2xl overflow-hidden py-1 z-50 flex flex-col"
-                                        >
-                                            <div className="px-4 py-3 border-b border-dark-700/50 mb-1 block sm:hidden">
-                                                <p className="text-sm font-bold text-white truncate">{userName}</p>
-                                            </div>
-                                            <button
-                                                onClick={() => {
-                                                    setIsProfileOpen(false);
-                                                    setActiveTab('Profile');
-                                                }}
-                                                className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-dark-300 hover:text-white hover:bg-dark-700/50 transition-colors w-full text-left"
-                                            >
-                                                <User className="w-4 h-4 text-primary-400" />
-                                                Profile Settings
-                                            </button>
-                                            <div className="h-px bg-dark-700/50 my-1"></div>
-                                            <button
-                                                onClick={() => {
-                                                    setIsProfileOpen(false);
-                                                    signOut();
-                                                }}
-                                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-colors text-left"
-                                            >
-                                                <LogOut className="w-4 h-4" />
-                                                Logout
-                                            </button>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
+                        <div className="flex flex-col leading-none truncate opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                            <span className="text-lg font-black text-content-base uppercase italic tracking-tighter">CareerCraft</span>
+                            <span className="text-[10px] font-black tracking-widest text-brand mt-0.5">CAREER INTELLIGENCE</span>
                         </div>
-                    </div>
+                    </Link>
                 </div>
-            </header>
 
-            <main className="flex-1 px-4 sm:px-6 lg:px-10 max-w-7xl mx-auto w-full pt-8 pb-32">
-                {/* Navigation Tabs */}
-                <nav className="flex space-x-10 border-b border-dark-800/80 mb-12 overflow-x-auto pb-px scrollbar-hide">
+                <div className="flex-1 overflow-y-auto py-8 px-3 flex flex-col gap-2 scrollbar-hide select-none">
+                    <div className="text-[10px] font-bold text-content-muted uppercase tracking-[0.2em] px-4 mb-3 opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 whitespace-nowrap">Navigation Map</div>
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.name;
@@ -596,37 +416,171 @@ export default function Dashboard() {
                             <button
                                 key={tab.name}
                                 onClick={() => setActiveTab(tab.name)}
-                                className={`flex items-center gap-2.5 pb-5 pt-2 text-sm font-bold border-b-2 whitespace-nowrap transition-all duration-300 relative group ${isActive
-                                    ? 'border-primary-500 text-white'
-                                    : 'border-transparent text-dark-500 hover:text-dark-300'
-                                    }`}
+                                className={`flex items-center px-1.5 py-1.5 rounded-xl transition-all font-bold tracking-tight text-sm text-left group overflow-hidden ${
+                                    isActive 
+                                    ? 'bg-brand/10 text-brand shadow-sm border border-brand/20' 
+                                    : 'text-content-muted hover:bg-surface-hover hover:text-content-base border border-transparent'
+                                }`}
                             >
-                                <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-primary-400' : 'text-dark-600 group-hover:text-dark-400'}`} />
-                                {tab.name}
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="activeTabUnderline"
-                                        className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-primary-500 shadow-[0_0_10px_rgba(14,165,233,0.5)]"
-                                    />
-                                )}
+                                <div className={`w-10 h-10 shrink-0 rounded-lg flex items-center justify-center transition-colors ${isActive ? 'bg-brand text-white shadow-md shadow-brand-glow' : 'text-content-muted group-hover:text-brand bg-transparent'}`}>
+                                    <Icon className="w-5 h-5" />
+                                </div>
+                                <div className="flex flex-col w-[200px] ml-4 opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                                    <span className="truncate">{tab.name}</span>
+                                    {!isActive && <span className="text-[10px] font-medium opacity-70 tracking-wide mt-0.5 truncate">{tab.description}</span>}
+                                </div>
                             </button>
                         );
                     })}
-                </nav>
+                </div>
 
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={activeTab}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
+                <div className="p-3 border-t border-stroke bg-surface-card shrink-0">
+                    <button 
+                        onClick={() => setActiveTab('Profile')}
+                        className={`flex items-center p-1.5 rounded-xl transition-colors overflow-hidden ${activeTab === 'Profile' ? 'bg-surface-hover border border-stroke' : 'hover:bg-surface-hover border border-transparent'}`}
                     >
-                        {renderHeader()}
-                        {renderContent()}
-                    </motion.div>
-                </AnimatePresence>
-            </main>
+                        <div className="w-10 h-10 rounded-lg bg-surface-hover border border-stroke flex items-center justify-center text-content-muted font-black shrink-0 text-sm">
+                            {userInitial}
+                        </div>
+                        <div className="flex flex-col text-left opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 ml-4 w-[200px] whitespace-nowrap">
+                            <span className="text-sm font-black text-content-base truncate">{userName}</span>
+                            <span className="text-[10px] font-bold text-content-muted uppercase tracking-wider truncate">Manage Account</span>
+                        </div>
+                    </button>
+                </div>
+            </aside>
+
+            {/* Main Viewport */}
+            <div className="w-[calc(100vw-80px)] shrink-0 flex flex-col min-w-0 overflow-hidden relative bg-surface-base transform-gpu">
+                {/* Top Header */}
+                <header className="h-[76px] border-b border-stroke bg-surface-card/90 backdrop-blur-xl flex items-center justify-between px-4 lg:px-8 z-30 shrink-0 sticky top-0">
+                    <div className="flex items-center gap-4">
+                        <button 
+                            onClick={() => setIsMobileMenuOpen(true)}
+                            className="lg:hidden p-2 rounded-xl border border-stroke bg-surface-base text-content-muted hover:text-content-base"
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
+                        <h1 className="text-xl font-black text-content-base tracking-tight hidden sm:block">
+                            {activeTab}
+                        </h1>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => {
+                                const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                                document.documentElement.setAttribute('data-theme', newTheme);
+                                localStorage.setItem('theme', newTheme);
+                                setTheme(newTheme);
+                            }}
+                            className="p-2.5 rounded-xl border border-stroke text-content-muted bg-surface-base hover:bg-surface-hover transition-colors shadow-sm cursor-pointer"
+                            aria-label="Toggle Theme"
+                        >
+                            {theme === 'dark' ? <Sun className="w-5 h-5 block" /> : <Moon className="w-5 h-5 block" />}
+                        </button>
+
+                        <div className="relative" ref={notificationsRef}>
+                            <button
+                                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                                className="p-2.5 rounded-xl border border-stroke text-content-muted bg-surface-base hover:bg-surface-hover transition-colors shadow-sm"
+                            >
+                                <Bell className="w-5 h-5" />
+                                <span className="absolute top-2.5 right-3 w-2 h-2 bg-brand rounded-full border-2 border-surface-base" />
+                            </button>
+                            <AnimatePresence>
+                                {isNotificationsOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        className="absolute right-0 mt-3 w-72 bg-surface-card border border-stroke rounded-2xl shadow-2xl overflow-hidden py-8 z-50 flex flex-col items-center justify-center text-center"
+                                    >
+                                        <div className="w-14 h-14 rounded-full bg-surface-hover border border-stroke flex items-center justify-center mb-4">
+                                            <Bell className="w-6 h-6 text-content-muted" />
+                                        </div>
+                                        <p className="text-content-base font-black text-base tracking-tight">Active Comm Link Clear</p>
+                                        <p className="text-content-muted text-xs font-medium mt-1">No new system alerts to display</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    </div>
+                </header>
+
+                {/* Dashboard Scrollable Area */}
+                <main className="flex-1 overflow-y-auto w-full p-4 sm:p-6 lg:p-8 relative">
+                    <div className="max-w-7xl mx-auto pb-24">
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={activeTab}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                {renderContent()}
+                            </motion.div>
+                        </AnimatePresence>
+                    </div>
+                </main>
+            </div>
+
+            {/* Mobile Sidebar Overlay */}
+            <AnimatePresence>
+                {isMobileMenuOpen && (
+                    <>
+                        <motion.div 
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+                        />
+                        <motion.aside
+                            initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="fixed top-0 left-0 bottom-0 w-72 bg-surface-card border-r border-stroke z-50 flex flex-col lg:hidden"
+                        >
+                            <div className="h-[76px] flex items-center justify-between px-6 border-b border-stroke shrink-0">
+                                <Link to="/" className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg">
+                                        <Logo className="w-full h-full" />
+                                    </div>
+                                    <span className="text-lg font-black text-content-base uppercase italic tracking-tighter">CareerCraft</span>
+                                </Link>
+                                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-xl bg-surface-hover text-content-muted">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            
+                            <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-2">
+                                <div className="text-[10px] font-bold text-content-muted uppercase tracking-[0.2em] px-4 mb-2">Menu Map</div>
+                                {tabs.map((tab) => {
+                                    const Icon = tab.icon;
+                                    const isActive = activeTab === tab.name;
+                                    return (
+                                        <button
+                                            key={tab.name}
+                                            onClick={() => { setActiveTab(tab.name); setIsMobileMenuOpen(false); }}
+                                            className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all font-bold text-sm text-left ${
+                                                isActive ? 'bg-brand text-white shadow-md' : 'text-content-muted hover:bg-surface-hover'
+                                            }`}
+                                        >
+                                            <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-content-muted'}`} />
+                                            <span>{tab.name}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="p-4 border-t border-stroke bg-surface-card shrink-0">
+                                <button onClick={() => { setIsMobileMenuOpen(false); signOut(); }} className="btn-primary w-full shadow-sm bg-surface-hover border border-stroke text-red-500 hover:bg-red-500/10">
+                                    <LogOut className="w-4 h-4" /> Disconnect
+                                </button>
+                            </div>
+                        </motion.aside>
+                    </>
+                )}
+            </AnimatePresence>
+
         </div>
     );
 }

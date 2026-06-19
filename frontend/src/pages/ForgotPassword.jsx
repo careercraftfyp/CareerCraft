@@ -39,10 +39,10 @@ export default function ForgotPassword() {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="min-h-screen bg-dark-900 flex items-center justify-center p-6 relative overflow-hidden"
+            className="min-h-screen bg-surface-base flex items-center justify-center p-6 relative overflow-hidden"
         >
             {/* Background Accents */}
-            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary-500/10 blur-[120px] rounded-full animate-float-slow" />
+            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand-glow blur-[120px] rounded-full animate-float-slow" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-secondary-500/10 blur-[120px] rounded-full animate-float-slow" />
 
             <motion.div
@@ -50,7 +50,7 @@ export default function ForgotPassword() {
                 animate={{ opacity: 1, y: 0 }}
                 className="w-full max-w-md relative z-10"
             >
-                <div className="card glass p-8 md:p-10 shadow-2xl shadow-black/50 border-white/5 mt-12">
+                <div className="card-bento p-8 md:p-10 shadow-2xl shadow-black/50 border-white/5 mt-12">
                     <AnimatePresence mode="wait">
                         {sent ? (
                             <motion.div
@@ -59,14 +59,14 @@ export default function ForgotPassword() {
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="text-center py-4"
                             >
-                                <div className="w-20 h-20 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-3xl flex items-center justify-center mx-auto mb-8 animate-float">
+                                <div className="w-20 h-20 bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto mb-8 animate-float">
                                     <CheckCircle2 className="w-10 h-10" />
                                 </div>
-                                <h2 className="text-3xl font-black text-white tracking-tight mb-4">Check <span className="text-emerald-400">Email</span></h2>
-                                <p className="text-dark-400 font-medium leading-relaxed mb-4">
-                                    We've sent a password reset link to <span className="text-white font-bold">{email}</span>.
+                                <h2 className="text-3xl font-black text-content-base tracking-tight mb-4">Check <span className="text-emerald-500">Email</span></h2>
+                                <p className="text-content-muted font-medium leading-relaxed mb-4">
+                                    We've sent a password reset link to <span className="text-content-base font-bold">{email}</span>.
                                 </p>
-                                <p className="text-dark-500 text-sm leading-relaxed mb-10">
+                                <p className="text-content-muted text-sm leading-relaxed mb-10">
                                     Click the link in the email to reset your password. If you don't see it, check your spam folder.
                                 </p>
                                 <Link to="/login" className="btn-secondary w-full py-4 block text-center font-black uppercase tracking-[0.2em] text-sm">
@@ -76,8 +76,8 @@ export default function ForgotPassword() {
                         ) : (
                             <motion.div key="form">
                                 <div className="text-center mb-10">
-                                    <h1 className="text-3xl font-black text-white tracking-tight mb-3">Reset <span className="gradient-text">Password</span></h1>
-                                    <p className="text-dark-400 font-medium">Enter your email and we'll send you a reset link</p>
+                                    <h1 className="text-3xl font-black text-content-base tracking-tight mb-3">Reset <span className="gradient-text">Password</span></h1>
+                                    <p className="text-content-muted font-medium">Enter your email and we'll send you a reset link</p>
                                 </div>
 
                                 {error && (
@@ -93,9 +93,9 @@ export default function ForgotPassword() {
 
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="space-y-2">
-                                        <label className="text-xs text-dark-500 font-bold uppercase tracking-wider ml-1">Email Address</label>
+                                        <label className="text-xs text-content-muted font-bold uppercase tracking-wider ml-1">Email Address</label>
                                         <div className="relative group">
-                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-500 group-focus-within:text-primary-400 transition-colors" />
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-content-muted group-focus-within:text-brand transition-colors" />
                                             <input
                                                 type="email"
                                                 value={email}
@@ -110,7 +110,7 @@ export default function ForgotPassword() {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="btn-primary w-full py-4 mt-4 flex justify-center items-center gap-3 text-white font-bold text-lg shadow-lg shadow-primary-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                                        className="btn-primary w-full py-4 mt-4 flex justify-center items-center gap-3 text-content-base font-bold text-lg shadow-lg shadow-brand-glow hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
                                     >
                                         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                                             <>Send Reset Link <ArrowRight className="w-5 h-5" /></>
@@ -118,8 +118,8 @@ export default function ForgotPassword() {
                                     </button>
                                 </form>
 
-                                <p className="text-center text-dark-500 mt-10 text-sm font-medium">
-                                    Remember your password? <Link to="/login" className="text-primary-400 hover:text-white hover:underline transition-all font-bold">Sign in</Link>
+                                <p className="text-center text-content-muted mt-10 text-sm font-medium">
+                                    Remember your password? <Link to="/login" className="text-brand hover:text-content-base hover:underline transition-all font-bold">Sign in</Link>
                                 </p>
                             </motion.div>
                         )}

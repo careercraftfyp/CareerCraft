@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Rocket, Sparkles, LayoutDashboard, LogOut, User as UserIcon } from 'lucide-react';
+import { Menu, X, Sparkles, LayoutDashboard, LogOut, User as UserIcon, Sun, Moon } from 'lucide-react';
+import Logo from './Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -11,6 +12,16 @@ export default function Navbar() {
     const profileRef = useRef(null);
     const location = useLocation();
     const { user, signOut } = useAuth();
+
+    // Theme Toggle State
+    const [theme, setTheme] = useState(() => {
+        return localStorage.getItem('theme') || 'dark';
+    });
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+    const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -41,85 +52,43 @@ export default function Navbar() {
     if (location.pathname.includes('/dashboard') || location.pathname.includes('/interview')) return null;
 
     return (
-        <nav style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 50,
-            height: '72px',
-            display: 'flex',
-            alignItems: 'center',
-            padding: scrolled ? '0 1rem' : '0 1.5rem',
-            transition: 'all 0.4s ease',
-        }}>
-            {/* Inner container */}
-            <div style={{
-                maxWidth: '1280px',
-                width: '100%',
-                margin: '0 auto',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: scrolled ? '0.75rem 2rem' : '0',
-                borderRadius: scrolled ? '1rem' : '0',
-                background: scrolled ? 'rgba(15,23,42,0.85)' : 'transparent',
-                backdropFilter: scrolled ? 'blur(20px)' : 'none',
-                border: scrolled ? '1px solid rgba(255,255,255,0.08)' : 'none',
-                boxShadow: scrolled ? '0 8px 32px rgba(0,0,0,0.3)' : 'none',
-                transition: 'all 0.4s ease',
-            }}>
+        <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-center transition-all duration-500 ease-in-out pointer-events-none ${scrolled ? 'pt-6 px-6' : 'h-[80px] px-8'}`}>
+            <div className={`max-w-7xl mx-auto w-full flex items-center justify-between transition-all duration-500 ease-in-out pointer-events-auto ${scrolled ? 'py-3.5 px-10 rounded-full bg-surface-card/90 backdrop-blur-xl border border-stroke shadow-[0_8px_30px_rgba(0,0,0,0.12)]' : 'py-2 px-4'}`}>
 
-                {/* Logo */}
-                <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
-                    <div style={{
-                        width: '40px', height: '40px', borderRadius: '0.75rem',
-                        background: 'linear-gradient(135deg, #0ea5e9 0%, #d946ef 100%)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 4px 15px rgba(14,165,233,0.3)',
-                    }}>
-                        <Rocket style={{ width: '20px', height: '20px', color: 'white', fill: 'white' }} />
+                <Link to="/" className="flex items-center gap-4 group">
+                    <div className="w-12 h-12 rounded-2xl bg-brand p-1.5 shadow-lg shadow-brand/20 group-hover:scale-105 transition-transform duration-300">
+                        <div className="w-full h-full rounded-xl overflow-hidden">
+                            <Logo className="w-full h-full" />
+                        </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-                        <span style={{ fontSize: '1.1rem', fontWeight: 900, color: 'white', textTransform: 'uppercase', fontStyle: 'italic', letterSpacing: '-0.03em' }}>
-                            CareerCraft
-                        </span>
-                        <span style={{ fontSize: '0.55rem', fontWeight: 800, letterSpacing: '0.25em', color: '#38bdf8', marginTop: '2px' }}>
-                            AI ENGINE
-                        </span>
+                    <div className="flex flex-col">
+                        <span className="text-lg font-black text-content-base italic tracking-tighter uppercase leading-none">CareerCraft</span>
+                        <span className="text-[9px] font-bold text-brand uppercase tracking-[0.3em] mt-1">Intelligence</span>
                     </div>
                 </Link>
 
-                {/* Desktop nav links */}
-                <div className="hidden lg:flex" style={{ alignItems: 'center', gap: '0.5rem' }}>
+                <div className="hidden lg:flex items-center gap-2">
                     {navLinks.map(link => (
                         <Link
                             key={link.name}
                             to={link.path}
-                            style={{
-                                padding: '0.5rem 1rem',
-                                borderRadius: '0.5rem',
-                                fontSize: '0.875rem',
-                                fontWeight: 700,
-                                textDecoration: 'none',
-                                color: location.pathname === link.path ? '#38bdf8' : '#94a3b8',
-                                transition: 'color 0.2s, background 0.2s',
-                                position: 'relative',
-                            }}
-                            onMouseEnter={e => { if (location.pathname !== link.path) e.currentTarget.style.color = 'white'; }}
-                            onMouseLeave={e => { if (location.pathname !== link.path) e.currentTarget.style.color = '#94a3b8'; }}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${location.pathname === link.path ? 'text-brand' : 'text-content-muted hover:text-content-base hover:bg-surface-hover'}`}
                         >
                             {link.name}
                         </Link>
                     ))}
 
-                    <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', margin: '0 0.5rem' }} />
+                    <div className="w-px h-6 bg-stroke mx-2" />
+
+                    <button onClick={toggleTheme} className="p-2 rounded-xl text-content-muted hover:bg-surface-hover transition-colors">
+                        {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                    </button>
 
                     {user ? (
-                        <div className="relative" ref={profileRef}>
+                        <div className="relative ml-2" ref={profileRef}>
                             <button
                                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center text-white font-black text-lg shadow-lg shadow-primary-500/20 hover:scale-105 transition-transform"
+                                className="w-10 h-10 rounded-xl bg-brand flex items-center justify-center text-white font-black text-lg shadow-lg hover:scale-105 transition-transform"
                             >
                                 {user?.user_metadata?.full_name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
                             </button>
@@ -131,123 +100,86 @@ export default function Navbar() {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                         transition={{ duration: 0.2 }}
-                                        className="absolute right-0 mt-3 w-48 bg-dark-800 border border-dark-700/50 rounded-2xl shadow-2xl overflow-hidden py-1 z-50 flex flex-col"
+                                        className="absolute right-0 mt-3 w-48 bg-surface-card border border-stroke rounded-2xl shadow-2xl overflow-hidden py-1 z-50 flex flex-col"
                                     >
-                                        <div className="px-4 py-3 border-b border-dark-700/50 mb-1">
-                                            <p className="text-sm font-bold text-white truncate">{user?.user_metadata?.full_name || 'User'}</p>
-                                            <p className="text-xs text-dark-400 truncate">{user?.email}</p>
+                                        <div className="px-4 py-3 border-b border-stroke mb-1">
+                                            <p className="text-sm font-bold text-content-base truncate">{user?.user_metadata?.full_name || 'User'}</p>
+                                            <p className="text-xs text-content-muted truncate">{user?.email}</p>
                                         </div>
-                                        <Link
-                                            to="/profile"
-                                            onClick={() => setIsProfileOpen(false)}
-                                            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-dark-300 hover:text-white hover:bg-dark-700/50 transition-colors"
-                                        >
-                                            <UserIcon className="w-4 h-4 text-primary-400" />
-                                            Profile
+                                        <Link to="/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-content-muted hover:text-content-base hover:bg-surface-hover transition-colors">
+                                            <UserIcon className="w-4 h-4 text-brand" /> Profile
                                         </Link>
-                                        <Link
-                                            to="/dashboard"
-                                            onClick={() => setIsProfileOpen(false)}
-                                            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-dark-300 hover:text-white hover:bg-dark-700/50 transition-colors"
-                                        >
-                                            <LayoutDashboard className="w-4 h-4 text-secondary-400" />
-                                            Dashboard
+                                        <Link to="/dashboard" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-content-muted hover:text-content-base hover:bg-surface-hover transition-colors">
+                                            <LayoutDashboard className="w-4 h-4 text-brand" /> Dashboard
                                         </Link>
-                                        <div className="h-px bg-dark-700/50 my-1"></div>
-                                        <button
-                                            onClick={() => {
-                                                setIsProfileOpen(false);
-                                                signOut();
-                                            }}
-                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-colors text-left"
-                                        >
-                                            <LogOut className="w-4 h-4" />
-                                            Logout
+                                        <div className="h-px bg-stroke my-1"></div>
+                                        <button onClick={() => { setIsProfileOpen(false); signOut(); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-colors text-left">
+                                            <LogOut className="w-4 h-4" /> Logout
                                         </button>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
                     ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <Link to="/login" style={{ padding: '0.5rem 1.25rem', fontSize: '0.875rem', fontWeight: 700, color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s' }}
-                                onMouseEnter={e => e.currentTarget.style.color = 'white'}
-                                onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}>
+                        <div className="flex items-center gap-3 ml-2">
+                            <Link to="/login" className="px-5 py-2 text-sm font-bold text-content-muted hover:text-content-base transition-colors">
                                 Login
                             </Link>
-                            <Link to="/signup" className="btn-primary" style={{ fontSize: '0.875rem', padding: '0.625rem 1.5rem', borderRadius: '0.5rem' }}>
-                                <Sparkles style={{ width: '16px', height: '16px' }} />
-                                Get Started
+                            <Link to="/signup" className="btn-primary py-2.5 px-6">
+                                <Sparkles className="w-4 h-4" /> Get Started
                             </Link>
                         </div>
                     )}
                 </div>
 
-                {/* Mobile toggle */}
-                <button
-                    className="lg:hidden"
-                    onClick={() => setIsOpen(!isOpen)}
-                    style={{
-                        padding: '0.625rem', borderRadius: '0.75rem', cursor: 'pointer',
-                        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                        color: '#94a3b8', transition: 'color 0.2s',
-                    }}
-                >
-                    {isOpen ? <X style={{ width: '24px', height: '24px' }} /> : <Menu style={{ width: '24px', height: '24px' }} />}
-                </button>
+                <div className="flex lg:hidden items-center gap-3">
+                    <button onClick={toggleTheme} className="p-2 rounded-xl text-content-muted bg-surface-card border border-stroke hover:bg-surface-hover transition-colors">
+                        {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                    </button>
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="p-2.5 rounded-xl bg-surface-card border border-stroke text-content-muted hover:text-content-base transition-colors"
+                    >
+                        {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                    </button>
+                </div>
             </div>
 
-            {/* Mobile menu */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
                         initial={{ opacity: 0, y: -10, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.97 }}
-                        style={{
-                            position: 'absolute', top: '80px', left: '1rem', right: '1rem',
-                            padding: '1.5rem',
-                            background: 'rgba(15,23,42,0.95)',
-                            backdropFilter: 'blur(20px)',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            borderRadius: '1rem',
-                            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-                        }}
-                        className="lg:hidden"
+                        className="absolute top-[80px] left-4 right-4 p-6 bg-surface-card backdrop-blur-xl border border-stroke rounded-2xl shadow-2xl lg:hidden z-50"
                     >
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <div className="flex flex-col gap-2">
                             {navLinks.map(link => (
                                 <Link
                                     key={link.name}
                                     to={link.path}
-                                    style={{
-                                        padding: '0.875rem 1.25rem', borderRadius: '0.75rem',
-                                        fontWeight: 700, fontSize: '1rem', textDecoration: 'none',
-                                        color: location.pathname === link.path ? '#38bdf8' : '#cbd5e1',
-                                        background: location.pathname === link.path ? 'rgba(14,165,233,0.05)' : 'transparent',
-                                        transition: 'all 0.2s',
-                                    }}
+                                    className={`px-5 py-3 rounded-xl font-bold text-base transition-colors ${location.pathname === link.path ? 'text-brand bg-brand-glow' : 'text-content-base hover:bg-surface-hover'}`}
                                 >
                                     {link.name}
                                 </Link>
                             ))}
-                            <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '0.75rem 0' }} />
+                            <div className="h-px bg-stroke my-3" />
                             {user ? (
-                                <div style={{ display: 'grid', gap: '0.75rem' }}>
-                                    <Link to="/profile" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', padding: '0.875rem', borderRadius: '0.75rem', color: 'white', fontWeight: 700, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', textDecoration: 'none' }}>
+                                <div className="grid gap-3">
+                                    <Link to="/profile" className="flex justify-center items-center gap-2 p-3 rounded-xl text-content-base font-bold bg-surface-hover border border-stroke">
                                         <UserIcon className="w-4 h-4" /> Profile
                                     </Link>
-                                    <Link to="/dashboard" className="btn-primary" style={{ justifyContent: 'center', padding: '0.875rem' }}>
+                                    <Link to="/dashboard" className="btn-primary justify-center p-3">
                                         <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard
                                     </Link>
-                                    <button onClick={signOut} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', padding: '0.875rem', borderRadius: '0.75rem', color: '#f87171', fontWeight: 700, background: 'transparent', border: '1px solid rgba(239,68,68,0.15)', cursor: 'pointer' }}>
+                                    <button onClick={signOut} className="flex justify-center items-center gap-2 p-3 rounded-xl text-red-500 font-bold border border-red-500/20 hover:bg-red-500/10 transition-colors">
                                         <LogOut className="w-4 h-4" /> Logout
                                     </button>
                                 </div>
                             ) : (
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                                    <Link to="/login" style={{ padding: '0.875rem', textAlign: 'center', borderRadius: '0.75rem', color: 'white', fontWeight: 700, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', textDecoration: 'none' }}>Login</Link>
-                                    <Link to="/signup" className="btn-primary" style={{ justifyContent: 'center', padding: '0.875rem' }}>Sign Up</Link>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Link to="/login" className="p-3 text-center rounded-xl text-content-base font-bold bg-surface-hover border border-stroke">Login</Link>
+                                    <Link to="/signup" className="btn-primary justify-center p-3">Sign Up</Link>
                                 </div>
                             )}
                         </div>

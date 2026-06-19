@@ -48,10 +48,10 @@ export default function Services() {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="pt-32 pb-24 min-h-screen bg-dark-900 overflow-hidden relative"
+            className="pt-32 pb-24 min-h-screen bg-surface-base overflow-hidden relative"
         >
             {/* Dynamic Background Elements */}
-            <div className="absolute top-0 right-[-10%] w-[500px] h-[500px] bg-primary-500/10 blur-[120px] rounded-full animate-float-slow" />
+            <div className="absolute top-0 right-[-10%] w-[500px] h-[500px] bg-brand-glow blur-[120px] rounded-full animate-float-slow" />
             <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-secondary-500/10 blur-[120px] rounded-full animate-float-slow" />
 
             <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -59,7 +59,7 @@ export default function Services() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-400 text-xs font-black uppercase tracking-[0.2em] mb-6"
+                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-glow border border-brand/20 text-brand text-xs font-black uppercase tracking-[0.2em] mb-6"
                     >
                         <Sparkles className="w-4 h-4" />
                         Core Capabilities
@@ -68,7 +68,7 @@ export default function Services() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter leading-none italic uppercase"
+                        className="text-5xl md:text-7xl font-black text-content-base mb-8 tracking-tighter leading-none italic uppercase"
                     >
                         Neural <span className="gradient-text">Powerhouse</span>
                     </motion.h1>
@@ -76,7 +76,7 @@ export default function Services() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="text-xl text-dark-400 font-medium leading-relaxed"
+                        className="text-xl text-content-muted font-medium leading-relaxed"
                     >
                         Deploying state-of-the-art AI architecture to automate your career ascent.
                         From vision to execution, CareerCraft is your professional edge.
@@ -91,25 +91,25 @@ export default function Services() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: index * 0.1 }}
-                            className="card group hover:border-primary-500/30 transition-all p-10 relative overflow-hidden"
+                            className="card-bento group hover:border-brand/20 transition-all p-10 relative overflow-hidden"
                         >
-                            <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-primary-500/5 blur-[60px] rounded-full group-hover:bg-primary-500/10 transition-colors" />
+                            <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-brand/5 blur-[60px] rounded-full group-hover:bg-brand-glow transition-colors" />
 
                             <div className={`w-16 h-16 rounded-2xl bg-${service.color}-500/20 border border-${service.color}-500/30 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform`}>
                                 <service.icon className={`w-8 h-8 text-${service.color}-400`} />
                             </div>
 
-                            <h3 className="text-3xl font-black text-white mb-4 uppercase italic tracking-tight leading-none">
+                            <h3 className="text-3xl font-black text-content-base mb-4 uppercase italic tracking-tight leading-none">
                                 {service.title}
                             </h3>
-                            <p className="text-dark-400 text-lg leading-relaxed mb-8 font-medium">
+                            <p className="text-content-muted text-lg leading-relaxed mb-8 font-medium">
                                 {service.description}
                             </p>
 
                             <ul className="space-y-3 mb-10">
                                 {service.features.map(f => (
-                                    <li key={f} className="flex items-center gap-3 text-dark-300 text-sm font-bold uppercase tracking-wider">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-primary-400 shadow-[0_0_8px_rgba(14,165,233,0.5)]" />
+                                    <li key={f} className="flex items-center gap-3 text-content-base text-sm font-bold uppercase tracking-wider">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-brand shadow-[0_0_8px_rgba(14,165,233,0.5)]" />
                                         {f}
                                     </li>
                                 ))}
@@ -117,7 +117,7 @@ export default function Services() {
 
                             <Link
                                 to="/signup"
-                                className="inline-flex items-center gap-2 text-primary-400 font-black uppercase tracking-widest text-sm hover:gap-4 transition-all"
+                                className="inline-flex items-center gap-2 text-brand font-black uppercase tracking-widest text-sm hover:gap-4 transition-all"
                             >
                                 Deploy Now <ArrowRight className="w-4 h-4" />
                             </Link>
@@ -133,11 +133,11 @@ export default function Services() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.5 + index * 0.1 }}
-                            className="glass p-8 border-white/5 flex flex-col items-center text-center"
+                            className="card-bento p-8 border-white/5 flex flex-col items-center text-center"
                         >
-                            <stat.icon className="w-6 h-6 text-dark-500 mb-4" />
-                            <div className="text-3xl font-black text-white mb-2 italic uppercase">{stat.value}</div>
-                            <div className="text-[10px] text-dark-500 font-black uppercase tracking-[0.3em]">{stat.label}</div>
+                            <stat.icon className="w-6 h-6 text-content-muted mb-4" />
+                            <div className="text-3xl font-black text-content-base mb-2 italic uppercase">{stat.value}</div>
+                            <div className="text-[10px] text-content-muted font-black uppercase tracking-[0.3em]">{stat.label}</div>
                         </motion.div>
                     ))}
                 </div>

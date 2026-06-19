@@ -3,9 +3,10 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
     Video, Mic, MicOff, PhoneOff, Sparkles,
     Briefcase, Building, ChevronRight, Loader2,
-    CheckCircle, AlertCircle, X, Rocket, Cpu, Target, Shield,
+    CheckCircle, AlertCircle, X, Cpu, Target, Shield,
     ArrowLeft, FileText, Zap
 } from 'lucide-react';
+import Logo from '../components/Logo';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 
@@ -70,17 +71,17 @@ function SetupScreen({ onStart, isLoading, error }) {
     };
 
     return (
-        <div className="min-h-screen bg-dark-900 flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="min-h-screen bg-surface-base flex items-center justify-center p-6 relative overflow-hidden">
             {/* Top Left Navigation */}
             <button
                 onClick={() => navigate('/dashboard')}
-                className="absolute top-8 left-8 z-20 flex items-center gap-2 text-dark-500 hover:text-white transition-colors group px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5"
+                className="absolute top-8 left-8 z-20 flex items-center gap-2 text-content-muted hover:text-content-base transition-colors group px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5"
             >
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                 <span className="text-[10px] font-black uppercase tracking-widest">Command Center</span>
             </button>
             {/* Background Accents */}
-            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary-500/10 blur-[120px] rounded-full animate-float-slow" />
+            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand-glow blur-[120px] rounded-full animate-float-slow" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-secondary-500/10 blur-[120px] rounded-full animate-float-slow" />
 
             <div className="w-full max-w-2xl relative z-10 py-12">
@@ -89,7 +90,7 @@ function SetupScreen({ onStart, isLoading, error }) {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-400 text-xs font-black uppercase tracking-[0.2em] mb-6"
+                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-glow border border-brand/20 text-brand text-xs font-black uppercase tracking-[0.2em] mb-6"
                     >
                         <Sparkles className="w-4 h-4" />
                         Neural Simulation Protocol
@@ -98,7 +99,7 @@ function SetupScreen({ onStart, isLoading, error }) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-4 italic uppercase leading-none"
+                        className="text-4xl md:text-6xl font-black text-content-base tracking-tighter mb-4 italic uppercase leading-none"
                     >
                         Prepare for <span className="gradient-text">Deployment</span>
                     </motion.h1>
@@ -106,7 +107,7 @@ function SetupScreen({ onStart, isLoading, error }) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="text-dark-400 text-lg font-medium max-w-lg mx-auto"
+                        className="text-content-muted text-lg font-medium max-w-lg mx-auto"
                     >
                         Practice with role-specific AI avatars that adapt to your profile in real-time.
                     </motion.p>
@@ -117,17 +118,17 @@ function SetupScreen({ onStart, isLoading, error }) {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="card glass p-8 md:p-10 shadow-2xl shadow-black/50 border-white/5"
+                    className="card-bento p-8 md:p-10 shadow-2xl shadow-black/50 border-white/5"
                 >
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Resume Upload Section */}
-                        <div className="space-y-4 p-6 bg-primary-500/5 rounded-3xl border border-primary-500/10 mb-8">
+                        <div className="space-y-4 p-6 bg-brand/5 rounded-3xl border border-brand/20 mb-8">
                             <div className="flex items-center justify-between mb-2">
-                                <label className="text-[10px] text-primary-400 font-black uppercase tracking-widest ml-1">
+                                <label className="text-[10px] text-brand font-black uppercase tracking-widest ml-1">
                                     <FileText className="w-3 h-3 inline mr-2" />
                                     Experience Calibration (Resume) *
                                 </label>
-                                {isUploading && <Loader2 className="w-3 h-3 text-primary-400 animate-spin" />}
+                                {isUploading && <Loader2 className="w-3 h-3 text-brand animate-spin" />}
                             </div>
 
                             <button
@@ -135,20 +136,20 @@ function SetupScreen({ onStart, isLoading, error }) {
                                 onClick={() => fileInputRef.current?.click()}
                                 className={`w-full py-8 border-2 border-dashed rounded-3xl transition-all flex flex-col items-center justify-center gap-4 group ${
                                     resumeText 
-                                    ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' 
-                                    : 'bg-dark-800/50 border-white/10 text-dark-400 hover:border-primary-500/50 hover:bg-primary-500/5'
+                                    ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500' 
+                                    : 'bg-surface-hover border-white/10 text-content-muted hover:border-brand/20 hover:bg-brand/5'
                                 }`}
                             >
                                 <div className={`p-4 rounded-2xl transition-colors ${
-                                    resumeText ? 'bg-emerald-500/10' : 'bg-white/5 group-hover:bg-primary-500/10'
+                                    resumeText ? 'bg-emerald-500/10' : 'bg-white/5 group-hover:bg-brand-glow'
                                 }`}>
-                                    <Rocket className={`w-8 h-8 ${resumeText ? 'text-emerald-400' : 'text-dark-500 group-hover:text-primary-400'}`} />
+                                    <Logo className={`w-8 h-8 ${resumeText ? 'text-emerald-500' : 'text-content-muted group-hover:text-brand'}`} />
                                 </div>
                                 <div className="text-center px-4">
                                     <p className="text-[10px] font-black uppercase tracking-widest mb-1">
                                         {resumeText ? 'Neural Profile Synced' : 'Ready for Calibration'}
                                     </p>
-                                    <p className="text-[9px] font-bold text-dark-500 uppercase tracking-wider">
+                                    <p className="text-[9px] font-bold text-content-muted uppercase tracking-wider">
                                         {resumeText ? 'Your background is now part of the simulation context' : 'Drop your resume (PDF) here or click to browse'}
                                     </p>
                                 </div>
@@ -168,8 +169,8 @@ function SetupScreen({ onStart, isLoading, error }) {
                                     animate={{ opacity: 1, y: 0 }}
                                     className="flex items-center justify-center gap-2"
                                 >
-                                    <CheckCircle className="w-3 h-3 text-emerald-400" />
-                                    <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+                                    <CheckCircle className="w-3 h-3 text-emerald-500" />
+                                    <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">
                                         Resume Applied Successfully
                                     </span>
                                 </motion.div>
@@ -177,8 +178,8 @@ function SetupScreen({ onStart, isLoading, error }) {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] text-dark-500 font-black uppercase tracking-widest ml-1">
-                                <Target className="w-3 h-3 inline mr-2 text-primary-400" />
+                            <label className="text-[10px] text-content-muted font-black uppercase tracking-widest ml-1">
+                                <Target className="w-3 h-3 inline mr-2 text-brand" />
                                 Target Position *
                             </label>
                             <input
@@ -193,8 +194,8 @@ function SetupScreen({ onStart, isLoading, error }) {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-[10px] text-dark-500 font-black uppercase tracking-widest ml-1">
-                                    <Briefcase className="w-3 h-3 inline mr-2 text-primary-400" />
+                                <label className="text-[10px] text-content-muted font-black uppercase tracking-widest ml-1">
+                                    <Briefcase className="w-3 h-3 inline mr-2 text-brand" />
                                     Job Field
                                 </label>
                                 <select
@@ -211,8 +212,8 @@ function SetupScreen({ onStart, isLoading, error }) {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] text-dark-500 font-black uppercase tracking-widest ml-1">
-                                    <Shield className="w-3 h-3 inline mr-2 text-primary-400" />
+                                <label className="text-[10px] text-content-muted font-black uppercase tracking-widest ml-1">
+                                    <Shield className="w-3 h-3 inline mr-2 text-brand" />
                                     Difficulty
                                 </label>
                                 <select
@@ -234,8 +235,8 @@ function SetupScreen({ onStart, isLoading, error }) {
                                 exit={{ opacity: 0, height: 0 }}
                                 className="space-y-2"
                             >
-                                <label className="text-[10px] text-dark-500 font-black uppercase tracking-widest ml-1">
-                                    <Briefcase className="w-3 h-3 inline mr-2 text-primary-400" />
+                                <label className="text-[10px] text-content-muted font-black uppercase tracking-widest ml-1">
+                                    <Briefcase className="w-3 h-3 inline mr-2 text-brand" />
                                     Please Specify Field *
                                 </label>
                                 <input
@@ -250,10 +251,10 @@ function SetupScreen({ onStart, isLoading, error }) {
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-[10px] text-dark-500 font-black uppercase tracking-widest ml-1">
-                                <Video className="w-3 h-3 inline mr-2 text-primary-400" />
+                            <label className="text-[10px] text-content-muted font-black uppercase tracking-widest ml-1">
+                                <Video className="w-3 h-3 inline mr-2 text-brand" />
                                 Your Camera & Mic
-                                <span className="text-dark-600 text-[10px] font-bold ml-2">(AI always uses video)</span>
+                                <span className="text-content-muted text-[10px] font-bold ml-2">(AI always uses video)</span>
                             </label>
                             <select
                                 value={mode}
@@ -266,8 +267,8 @@ function SetupScreen({ onStart, isLoading, error }) {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] text-dark-500 font-black uppercase tracking-widest ml-1">
-                                <Building className="w-3 h-3 inline mr-2 text-primary-400" />
+                            <label className="text-[10px] text-content-muted font-black uppercase tracking-widest ml-1">
+                                <Building className="w-3 h-3 inline mr-2 text-brand" />
                                 Target Organization
                             </label>
                             <input
@@ -280,10 +281,10 @@ function SetupScreen({ onStart, isLoading, error }) {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] text-dark-500 font-black uppercase tracking-widest ml-1">
-                                <Cpu className="w-3 h-3 inline mr-2 text-primary-400" />
+                            <label className="text-[10px] text-content-muted font-black uppercase tracking-widest ml-1">
+                                <Cpu className="w-3 h-3 inline mr-2 text-brand" />
                                 Job Context / Description
-                                <span className="text-dark-600 text-[10px] font-bold ml-2">(Neural Optimization Only)</span>
+                                <span className="text-content-muted text-[10px] font-bold ml-2">(Neural Optimization Only)</span>
                             </label>
                             <textarea
                                 value={jobDescription}
@@ -308,7 +309,7 @@ function SetupScreen({ onStart, isLoading, error }) {
                         <button
                             type="submit"
                             disabled={isLoading || isUploading}
-                            className="btn-primary w-full flex items-center justify-center gap-3 py-5 text-white font-black uppercase tracking-[0.2em] text-sm shadow-xl shadow-primary-500/20 active:scale-[0.98] transition-all disabled:opacity-50"
+                            className="btn-primary w-full flex items-center justify-center gap-3 py-5 text-content-base font-black uppercase tracking-[0.2em] text-sm shadow-xl shadow-brand-glow active:scale-[0.98] transition-all disabled:opacity-50"
                         >
                             {isLoading ? (
                                 <>
@@ -333,7 +334,7 @@ function SetupScreen({ onStart, isLoading, error }) {
                             'Clear Communication Path',
                             'Calibrate Persona Input'
                         ].map((tip) => (
-                            <div key={tip} className="flex items-center gap-2 text-dark-500 text-[10px] font-black uppercase tracking-widest">
+                            <div key={tip} className="flex items-center gap-2 text-content-muted text-[10px] font-black uppercase tracking-widest">
                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                                 {tip}
                             </div>
@@ -342,7 +343,7 @@ function SetupScreen({ onStart, isLoading, error }) {
                 </motion.div>
 
                 <div className="text-center mt-8">
-                    <Link to="/dashboard" className="text-dark-500 hover:text-white text-xs font-black uppercase tracking-widest transition-colors">
+                    <Link to="/dashboard" className="text-content-muted hover:text-content-base text-xs font-black uppercase tracking-widest transition-colors">
                         ← ABORT TO COMMAND CENTER
                     </Link>
                 </div>
@@ -405,11 +406,11 @@ function SessionScreen({ session, onEnd, isEnding }) {
     return (
         <div className="min-h-screen bg-black flex flex-col font-mono">
             {/* HUD Header */}
-            <header className="px-6 py-4 border-b border-white/5 bg-dark-900/80 backdrop-blur-xl flex items-center justify-between z-20">
+            <header className="px-6 py-4 border-b border-white/5 bg-surface-card backdrop-blur-xl flex items-center justify-between z-20">
                 <div className="flex items-center gap-6">
                     <button
                         onClick={handleTerminate}
-                        className="p-2 hover:bg-white/5 rounded-lg transition-colors text-dark-400 hover:text-white"
+                        className="p-2 hover:bg-white/5 rounded-lg transition-colors text-content-muted hover:text-content-base"
                         title="Back to Command Center"
                     >
                         <ArrowLeft className="w-5 h-5" />
@@ -420,17 +421,17 @@ function SessionScreen({ session, onEnd, isEnding }) {
                     </div>
                     <div className="h-4 w-px bg-white/10" />
                     <div>
-                        <p className="text-white font-black text-xs uppercase italic tracking-wider">{session.meta?.position || 'Mock Interview'}</p>
-                        <p className="text-dark-500 text-[10px] font-bold uppercase tracking-widest">{session.meta?.company || 'Neural Agent'}</p>
+                        <p className="text-content-base font-black text-xs uppercase italic tracking-wider">{session.meta?.position || 'Mock Interview'}</p>
+                        <p className="text-content-muted text-[10px] font-bold uppercase tracking-widest">{session.meta?.company || 'Neural Agent'}</p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                     <div className="hidden md:flex flex-col items-end">
-                        <div className="text-[10px] text-dark-500 font-black uppercase tracking-widest">Signal Strength</div>
+                        <div className="text-[10px] text-content-muted font-black uppercase tracking-widest">Signal Strength</div>
                         <div className="flex gap-0.5 mt-1">
                             {[1, 1, 1, 1, 0.5].map((v, i) => (
-                                <div key={i} className="w-1 h-3 rounded-full bg-primary-500" style={{ opacity: v }} />
+                                <div key={i} className="w-1 h-3 rounded-full bg-brand" style={{ opacity: v }} />
                             ))}
                         </div>
                     </div>
@@ -466,28 +467,28 @@ function SessionScreen({ session, onEnd, isEnding }) {
                 </div>
 
                 {/* Tactical Panel */}
-                <div className="w-full lg:w-96 bg-dark-900 border-t lg:border-t-0 lg:border-l border-white/5 shadow-2xl flex flex-col overflow-hidden">
+                <div className="w-full lg:w-96 bg-surface-base border-t lg:border-t-0 lg:border-l border-white/5 shadow-2xl flex flex-col overflow-hidden">
                     <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-hide">
 
                         {/* Audio Controls */}
                         <div>
-                            <h3 className="text-[10px] text-dark-500 font-black uppercase tracking-[0.2em] mb-4">Command Channels</h3>
+                            <h3 className="text-[10px] text-content-muted font-black uppercase tracking-[0.2em] mb-4">Command Channels</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <button
                                     onClick={() => setMicOn(v => !v)}
                                     className={`flex flex-col items-center gap-3 py-6 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all ${micOn
-                                        ? 'bg-dark-800 border-white/10 text-white hover:bg-dark-700'
+                                        ? 'bg-surface-card border-white/10 text-content-base hover:bg-surface-hover'
                                         : 'bg-red-500/10 border-red-500/30 text-red-500 shadow-[inset_0_0_20px_rgba(239,68,68,0.1)]'
                                         }`}
                                 >
-                                    {micOn ? <Mic className="w-6 h-6 text-primary-400" /> : <MicOff className="w-6 h-6" />}
+                                    {micOn ? <Mic className="w-6 h-6 text-brand" /> : <MicOff className="w-6 h-6" />}
                                     {micOn ? 'Uplink Open' : 'Uplink Muted'}
                                 </button>
-                                <div className="bg-dark-800 border border-white/5 rounded-2xl flex flex-col items-center justify-center gap-3 p-4">
+                                <div className="bg-surface-card border border-white/5 rounded-2xl flex flex-col items-center justify-center gap-3 p-4">
                                     <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden">
-                                        <div className="h-full bg-primary-500 w-2/3 animate-pulse" />
+                                        <div className="h-full bg-brand w-2/3 animate-pulse" />
                                     </div>
-                                    <span className="text-[10px] text-dark-500 font-bold uppercase tracking-widest">Latency: 142ms</span>
+                                    <span className="text-[10px] text-content-muted font-bold uppercase tracking-widest">Latency: 142ms</span>
                                 </div>
                             </div>
                         </div>
@@ -495,14 +496,14 @@ function SessionScreen({ session, onEnd, isEnding }) {
                         {/* Objectives Panel */}
                         <div>
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-[10px] text-dark-500 font-black uppercase tracking-[0.2em]">Deployment Context</h3>
-                                <div className="w-1.5 h-1.5 rounded-full bg-primary-400 shadow-[0_0_8px_rgba(14,165,233,0.5)]" />
+                                <h3 className="text-[10px] text-content-muted font-black uppercase tracking-[0.2em]">Deployment Context</h3>
+                                <div className="w-1.5 h-1.5 rounded-full bg-brand shadow-[0_0_8px_rgba(14,165,233,0.5)]" />
                             </div>
                             <div className="bg-dark-950/60 rounded-3xl p-6 border border-white/5 relative group overflow-hidden">
                                 <div className="absolute top-0 right-0 p-2 opacity-50">
-                                    <Target className="w-4 h-4 text-primary-400" />
+                                    <Target className="w-4 h-4 text-brand" />
                                 </div>
-                                <p className="text-dark-300 text-xs font-medium leading-relaxed italic">
+                                <p className="text-content-base text-xs font-medium leading-relaxed italic">
                                     "{session.interviewContext}"
                                 </p>
                             </div>
@@ -513,11 +514,11 @@ function SessionScreen({ session, onEnd, isEnding }) {
                             <h3 className="text-[10px] text-secondary-400 font-black uppercase tracking-[0.2em] mb-4">Tactical Advice</h3>
                             <ul className="space-y-3">
                                 {[
-                                    { icon: Rocket, text: 'Deploy STAR Method Logic' },
+                                    { icon: Logo, text: 'Deploy STAR Method Logic' },
                                     { icon: Target, text: 'Calibrate Precision Answers' },
                                     { icon: Shield, text: 'Maintain Neural Composure' }
                                 ].map((item, i) => (
-                                    <li key={i} className="flex items-center gap-3 text-dark-400 text-[10px] font-bold uppercase tracking-widest">
+                                    <li key={i} className="flex items-center gap-3 text-content-muted text-[10px] font-bold uppercase tracking-widest">
                                         <item.icon className="w-3.5 h-3.5 text-secondary-500/60" />
                                         {item.text}
                                     </li>
