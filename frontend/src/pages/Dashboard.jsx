@@ -17,28 +17,16 @@ import PracticeHub from './PracticeHub';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const mockAtsData = [
-    { name: 'Week 1', score: 65 },
-    { name: 'Week 2', score: 72 },
-    { name: 'Week 3', score: 85 },
-    { name: 'Week 4', score: 92 },
-];
-
-const mockInterviewData = [
-    { name: 'Soft Skills', score: 88 },
-    { name: 'Technical', score: 75 },
-    { name: 'System Design', score: 82 },
-    { name: 'Behavioral', score: 90 },
-];
-
 export default function Dashboard() {
     const { user, signOut } = useAuth();
     const [activeTab, setActiveTab] = useState('Overview');
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [history, setHistory] = useState([]);
     const [selectedResume, setSelectedResume] = useState(null);
     const [viewMode, setViewMode] = useState('overview'); // 'overview' or 'history'
     const profileRef = useRef(null);
+    const notificationsRef = useRef(null);
 
     const [liveStats, setLiveStats] = useState(null);
     const [loadingStats, setLoadingStats] = useState(true);
@@ -61,6 +49,9 @@ export default function Dashboard() {
         const handleClickOutside = (event) => {
             if (profileRef.current && !profileRef.current.contains(event.target)) {
                 setIsProfileOpen(false);
+            }
+            if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+                setIsNotificationsOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -246,26 +237,33 @@ export default function Dashboard() {
                                     <h3 className="font-semibold text-lg text-white">ATS Score Trend</h3>
                                 </div>
                             </div>
-                            <div className="flex-1 w-full h-full min-h-[300px] -ml-4">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={liveStats?.atsTrend || mockAtsData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                                        <defs>
-                                            <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
-                                        <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                                        <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dx={-10} domain={[0, 100]} />
-                                        <Tooltip
-                                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#fff' }}
-                                            itemStyle={{ color: '#0ea5e9' }}
-                                        />
-                                        <Area type="monotone" dataKey="score" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorScore)" strokeWidth={3} />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
+                            {(!liveStats?.atsTrend || liveStats.atsTrend.length === 0) ? (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center p-6 m-4 ml-0 bg-dark-800/20 rounded-2xl border border-dashed border-dark-700">
+                                    <FileText className="w-10 h-10 text-dark-500 mb-3" />
+                                    <p className="text-dark-300 font-medium text-sm leading-relaxed">Submit a resume to the <span className="text-primary-400">Analyzer</span><br/>to start tracking your ATS progression scores here.</p>
+                                </div>
+                            ) : (
+                                <div className="flex-1 w-full h-full min-h-[300px] -ml-4">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={liveStats?.atsTrend} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                            <defs>
+                                                <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3} />
+                                                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
+                                            <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                                            <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dx={-10} domain={[0, 100]} />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#fff' }}
+                                                itemStyle={{ color: '#0ea5e9' }}
+                                            />
+                                            <Area type="monotone" dataKey="score" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorScore)" strokeWidth={3} />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            )}
                         </div>
 
                         {/* Interview Scores */}
@@ -276,24 +274,31 @@ export default function Dashboard() {
                                     <h3 className="font-semibold text-lg text-white">Interview Readiness</h3>
                                 </div>
                             </div>
-                            <div className="flex-1 w-full h-full min-h-[300px] -ml-4">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={liveStats?.interviewScores || mockInterviewData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
-                                        <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                                        <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dx={-10} />
-                                        <Tooltip
-                                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)' }}
-                                            cursor={{ fill: '#334155', opacity: 0.2 }}
-                                        />
-                                        <Bar dataKey="score" fill="#d946ef" radius={[6, 6, 0, 0]} maxBarSize={40}>
-                                            {liveStats?.interviewScores?.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={['#d946ef', '#a855f7', '#8b5cf6', '#6366f1'][index % 4]} />
-                                            ))}
-                                        </Bar>
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
+                            {(!liveStats?.interviewScores || liveStats.interviewScores.length === 0) ? (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center p-6 m-4 ml-0 bg-dark-800/20 rounded-2xl border border-dashed border-dark-700">
+                                    <Video className="w-10 h-10 text-dark-500 mb-3" />
+                                    <p className="text-dark-300 font-medium text-sm leading-relaxed">Launch an <span className="text-fuchsia-400">AI Mock Interview</span><br/>to unlock your comprehensive soft & technical skill metrics.</p>
+                                </div>
+                            ) : (
+                                <div className="flex-1 w-full h-full min-h-[300px] -ml-4">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={liveStats?.interviewScores} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
+                                            <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                                            <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dx={-10} />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)' }}
+                                                cursor={{ fill: '#334155', opacity: 0.2 }}
+                                            />
+                                            <Bar dataKey="score" fill="#d946ef" radius={[6, 6, 0, 0]} maxBarSize={40}>
+                                                {liveStats?.interviewScores?.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={['#d946ef', '#a855f7', '#8b5cf6', '#6366f1'][index % 4]} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            )}
                         </div>
 
                         {/* Training Progress (New) */}
@@ -457,14 +462,32 @@ export default function Dashboard() {
                 <div className="flex items-center gap-8">
 
                     <div className="flex items-center gap-4">
-                        <button className="relative text-dark-400 hover:text-white transition-all p-2.5 rounded-xl hover:bg-dark-800 border border-transparent hover:border-dark-700">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-primary-500 rounded-full border-2 border-dark-900 animate-pulse"></span>
-                        </button>
-
-                        <button className="text-dark-400 hover:text-white transition-all p-2.5 rounded-xl hover:bg-dark-800 border border-transparent hover:border-dark-700">
-                            <Settings className="w-5 h-5" />
-                        </button>
+                        <div className="relative" ref={notificationsRef}>
+                            <button 
+                                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                                className="relative text-dark-400 hover:text-white transition-all p-2.5 rounded-xl hover:bg-dark-800 border border-transparent hover:border-dark-700"
+                            >
+                                <Bell className="w-5 h-5" />
+                                {/* Optional: You can keep or remove the pulse ping dot if you want to pretend there's a notification, or hide it when clicked */}
+                            </button>
+                            <AnimatePresence>
+                                {isNotificationsOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="absolute right-0 mt-3 w-64 bg-dark-800 border border-dark-700/50 rounded-2xl shadow-2xl overflow-hidden py-6 z-50 flex flex-col items-center justify-center text-center"
+                                    >
+                                        <div className="w-12 h-12 rounded-full bg-dark-900/50 border border-dark-700/50 flex items-center justify-center mb-3">
+                                            <Bell className="w-5 h-5 text-dark-500" />
+                                        </div>
+                                        <p className="text-dark-300 font-bold text-sm">No new notifications</p>
+                                        <p className="text-dark-500 font-medium text-xs mt-1">You're all caught up!</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
 
                         <div className="h-8 w-px bg-dark-700 mx-2" />
 

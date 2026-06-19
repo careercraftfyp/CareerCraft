@@ -580,9 +580,14 @@ export default function InterviewSession() {
                 method: 'POST'
             });
 
-            if (audioBlob && session.sessionId) {
+            if (session.sessionId) {
                 const formData = new FormData();
-                formData.append('audio', audioBlob, 'recording.webm');
+                if (audioBlob && audioBlob.size > 0) {
+                    formData.append('audio', audioBlob, 'recording.webm');
+                } else {
+                    // Append a tiny placeholder so FormData is not entirely empty
+                    formData.append('empty_flag', 'true');
+                }
 
                 await fetch(`${API_URL}/interviews/${session.sessionId}/evaluate`, {
                     method: 'POST',

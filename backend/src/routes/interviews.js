@@ -34,41 +34,43 @@ router.post('/initialize', mockAuth, async (req, res) => {
 
         const userId = req.user?.id || '00000000-0000-0000-0000-000000000000';
 
-        // 1. Generate Interview Questions via OpenAI
+        // 1. Generate Interview Questions and Resume Summary via OpenAI
         const questionsResponse = await openai.chat.completions.create({
-            model: 'gpt-4o',
+            model: 'gpt-4o-mini',
             messages: [{
                 role: 'system',
-                content: `You are an elite executive recruiter. Your goal is to generate a highly professional, structured interview sequence.
-                
-                Procedure:
-                1. Start with a classic "Tell me about yourself" introduction.
-                2. Follow with 2-3 deep technical or role-specific questions based on the resume and job description.
-                3. Include 1 behavioral question (STAR method style).
-                4. End with a question about their career goals or interest in the company.`
+                content: `You are an elite executive recruiter. Your goal is to generate a highly professional, structured interview sequence AND condense the candidate's resume for a fast-paced live AI interviewer.`
             }, {
                 role: 'user',
-                content: `Generate 6 structured interview questions for a ${difficulty} difficulty ${position} position in the ${field} field. 
-                Company context (if any): ${company}. 
-                Job Description context (if any): ${jobDescription}.
-                Candidate Resume context (if any): ${resumeText}.
+                content: `Task 1: Generate 6 structured interview questions for a ${difficulty} difficulty ${position} position in the ${field} field. 
+                Task 2: Summarize the candidate's resume into 5 ultra-dense bullet points focusing on key metrics, tech stacks, and achievements.
+
+                Context:
+                Company: ${company}. 
+                Job Description: ${jobDescription}.
+                Candidate Resume: ${resumeText}.
                 
-                The response MUST be a JSON object with a key named "questions" containing an array of 6 strings.
-                Example: { "questions": ["Can you introduce yourself?", "How do you handle X?", ...] }`
+                The response MUST be a JSON object with two keys:
+                1. "questions": an array of 6 strings (intro, technical, behavioral, closing).
+                2. "resumeSummary": A string containing the 5-bullet summary. If no resume, return "No resume provided."
+                
+                Example: { "questions": ["Q1", ...], "resumeSummary": "- Lead Dev at X\\n- Built Y\\n..." }`
             }],
             response_format: { type: "json_object" }
         });
 
         let questions = [];
+        let resumeSummary = 'No resume provided.';
         try {
             const rawContent = questionsResponse.choices[0].message.content;
             const parsed = JSON.parse(rawContent);
             questions = parsed.questions || [];
+            resumeSummary = parsed.resumeSummary || 'No resume provided.';
             if (questions.length === 0) {
-                 questions = Array.isArray(parsed) ? parsed : [];
+                questions = Array.isArray(parsed) ? parsed : [];
             }
         } catch (e) {
-            console.error('Failed to parse questions JSON', e);
+            console.error('Failed to parse questions/summary JSON', e);
             questions = [
                 "Tell me about yourself and your background.",
                 `What interested you in the ${position} role specifically?`,
@@ -100,36 +102,32 @@ router.post('/initialize', mockAuth, async (req, res) => {
 
         // 3. Create a Tavus Conversation
         const interviewContext = `
-        You are a highly CRITICAL senior executive recruiter for ${company || 'a top-tier firm'}. 
-        You are conducting a high-stakes interview for the ${position} position.
+        You are a CRITICAL senior executive recruiter for ${company || 'a top-tier firm'} interviewing for the ${position} position.
         
-        STUDY THIS CANDIDATE RESUME:
-        ${resumeText || 'No resume provided.'}
+        [CANDIDATE RESUME SUMMARY]:
+        ${resumeSummary}
 
-        YOUR PERSONALITY:
-        - You have extremely high standards and a sharp, critical mind.
-        - You are the leader of this conversation. DRIVE the interaction.
-        - Do NOT wait for the candidate to prompt you. If they stop speaking, take initiative.
+        [CRITICAL LATENCY CONSTRAINTS - YOU MUST OBEY]:
+        1. UNDER 2 SENTENCES: Every single response you give MUST be less than 2 sentences. Never go over.
+        2. ZERO FILLER: Do not say "That's great", "I understand", "Good answer", "Let's move on". Ask the next question immediately and aggressively.
+        3. NO WAITING: If they stop speaking for 2 seconds, immediately ask a follow-up or move to the next question.
+
+        [PERSONALITY]:
+        - You have incredibly high standards.
         - Be skeptical. If an answer is vague, press for details immediately.
+        - If their verbal answer contradicts their resume summary, point it out.
         
-        YOUR PROCEDURE:
-        1. Ask only ONE question at a time.
-        2. DRILL INTO THE RESUME: Ask highly specific questions about the projects, responsibilities, and skills mentioned in their resume.
-        3. If their verbal answer contradicts or is weaker than their resume, point it out.
-        4. BE PROACTIVE: If the candidate stops speaking for more than 2 seconds, immediately ask a follow-up or move to the next question.
-        5. NEVER stay silent for more than 3 seconds.
+        [INTERVIEW SCRIPT]:
+        ${questions.map((q, i) => `[Q${i + 1}] ${q}`).join('\n')}
         
-        HERE IS YOUR INTERVIEW SCRIPT:
-        ${questions.map((q, i) => `[Question ${i + 1}] ${q}`).join('\n')}
-        
-        Start now by greeting the candidate formally and asking for their introduction based on their resume.`;
+        Start now by briefly telling them to introduce themselves based on their resume.`;
 
         const tavusPayload = {
             persona_id: DEFAULT_PERSONA_ID,
             replica_id: DEFAULT_REPLICA_ID,
             conversation_name: `Mock Interview - ${position}`,
             conversational_context: interviewContext,
-            custom_greeting: `Hello. I'll be conducting your interview for the ${position} role today. We have a lot to cover. To start, please introduce yourself and outline your relevant background.`,
+            custom_greeting: `Hello. I'm assessing you for the ${position} role. Quickly introduce yourself and your background.`,
             properties: {
                 max_call_duration: 3600,
                 participant_left_timeout: 10,
@@ -232,7 +230,27 @@ router.post('/:sessionId/evaluate', mockAuth, upload.single('audio'), async (req
         const file = req.file;
 
         if (!file) {
-            return res.status(400).json({ error: 'Audio file is required for evaluation' });
+            // Fallback for missing audio (e.g. microphone disabled or denied)
+            const fallbackEvaluation = {
+                overallScore: 0,
+                communicationScore: 0,
+                contentRelevanceScore: 0,
+                strengths: ['N/A'],
+                improvements: ['Hardware missing: Enable microphone to receive actionable feedback'],
+                feedback: 'No audio was recorded during this session. Please ensure you have granted microphone permissions and are speaking clearly into your device.'
+            };
+
+            await supabase.from('interviews').update({
+                transcript: '[No Audio Data]',
+                evaluation: fallbackEvaluation,
+                status: 'completed'
+            }).eq('id', sessionId);
+
+            return res.json({
+                message: 'Processed with missing audio',
+                transcript: '[No Audio Data]',
+                evaluation: fallbackEvaluation
+            });
         }
 
         // Fetch session data
@@ -289,7 +307,7 @@ Provide a comprehensive, objective performance report. Your response MUST be a v
 }`;
 
         const evaluationResponse = await openai.chat.completions.create({
-            model: 'gpt-4o',
+            model: 'gpt-4o-mini',
             messages: [{
                 role: 'system',
                 content: 'You are an objective and constructive AI interviewer evaluator.'
@@ -425,7 +443,7 @@ The response MUST be a valid JSON object matching this structure:
 }`;
 
         const aiResponse = await openai.chat.completions.create({
-            model: 'gpt-4o',
+            model: 'gpt-4o-mini',
             messages: [{
                 role: 'system',
                 content: 'You are a precise and helpful AI Career Coach specialized in interview preparation.'

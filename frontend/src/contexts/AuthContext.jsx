@@ -34,8 +34,8 @@ export const AuthProvider = ({ children }) => {
         return () => subscription.unsubscribe();
     }, []);
 
-    const signUp = (email, password, fullName) => {
-        return supabase.auth.signUp({
+    const signUp = async (email, password, fullName) => {
+        return await supabase.auth.signUp({
             email,
             password,
             options: {

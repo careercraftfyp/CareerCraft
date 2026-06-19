@@ -30,9 +30,14 @@ export default function SignUp() {
         setLoading(true);
 
         try {
-            const { error } = await signUp(email, password, fullName);
+            const { data, error } = await signUp(email, password, fullName);
             if (error) throw error;
-            setSuccess(true);
+            
+            // If Supabase returns a session immediately, email confirmation is OFF.
+            // We don't need to show the "Check Email" screen, they will be auto-redirected.
+            if (!data?.session) {
+                setSuccess(true);
+            }
         } catch (err) {
             setError(err.message || 'Failed to create an account');
         } finally {
