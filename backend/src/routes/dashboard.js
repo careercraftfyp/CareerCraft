@@ -18,7 +18,7 @@ router.get('/stats', requireAuth, async (req, res) => {
         // 2. Fetch interviews stats
         const { data: interviews, error: interviewError } = await supabase
             .from('interviews')
-            .select('evaluation, created_at, status')
+            .select('id, evaluation, created_at, status')
             .eq('user_id', userId);
 
         if (resumeError && resumeError.code !== 'PGRST205') {
@@ -122,10 +122,10 @@ router.get('/stats', requireAuth, async (req, res) => {
         
         const trainingGrowth = trainingProgress > 0 ? Math.round(trainingProgress / 2) : 0; // estimate
 
-        const lastInterviewDate = completedInterviews.length > 0 
+        const lastInterview = completedInterviews.length > 0 
             ? completedInterviews.reduce((latest, current) => {
                 return new Date(current.created_at) > new Date(latest.created_at) ? current : latest;
-              }).created_at
+              })
             : null;
 
         res.json({
@@ -134,7 +134,8 @@ router.get('/stats', requireAuth, async (req, res) => {
             avgAtsScore: `${avgAtsScore}/100`,
             practiceTime: `${completedInterviews.length * 20 + completedPractice * 10}m`, // 20m per interview, 10m per practice
             trainingProgress: `${trainingProgress}%`,
-            lastInterviewDate: lastInterviewDate,
+            lastInterviewDate: lastInterview ? lastInterview.created_at : null,
+            lastInterviewId: lastInterview ? lastInterview.id : null,
             growth: {
                 resumes: resumesLastWeek,
                 interviews: interviewsLastWeek,

@@ -755,7 +755,7 @@ export default function AdminPanel() {
                     </div>
                     <div>
                         <h1 className="font-black text-content-base leading-none">Admin</h1>
-                        <span className="text-[10px] font-bold text-brand uppercase tracking-widest">Panel v1.0</span>
+                        <span className="text-[10px] font-bold text-brand uppercase tracking-widest">Panel</span>
                     </div>
                 </div>
 

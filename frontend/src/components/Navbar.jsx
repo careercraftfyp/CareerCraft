@@ -52,8 +52,8 @@ export default function Navbar() {
     if (location.pathname.includes('/dashboard') || location.pathname.includes('/interview') || location.pathname.includes('/cc-admin')) return null;
 
     return (
-        <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-center transition-all duration-500 ease-in-out pointer-events-none ${scrolled ? 'pt-6 px-6' : 'h-[80px] px-8'}`}>
-            <div className={`max-w-7xl mx-auto w-full flex items-center justify-between transition-all duration-500 ease-in-out pointer-events-auto ${scrolled ? 'py-3.5 px-10 rounded-full bg-surface-card border border-[#C88D8E]/40 shadow-xl shadow-[#C88D8E]/20 dark:border-stroke dark:shadow-none' : 'py-2 px-4'}`}>
+        <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-center transition-all duration-500 ease-in-out pointer-events-none ${scrolled ? 'pt-4 md:pt-6 px-4 md:px-6' : 'h-[80px] px-4 md:px-8'}`}>
+            <div className={`max-w-7xl mx-auto w-full flex items-center justify-between transition-all duration-500 ease-in-out pointer-events-auto ${scrolled ? 'py-3.5 px-6 md:px-10 rounded-full bg-surface-card border border-[#C88D8E]/40 shadow-xl shadow-[#C88D8E]/20 dark:border-stroke dark:shadow-none' : 'py-2 px-4'}`}>
 
                 <Link to="/" className="flex items-center gap-4 group">
                     <div className="w-12 h-12 rounded-2xl bg-brand p-1.5 shadow-lg shadow-brand/20 group-hover:scale-105 transition-transform duration-300">
@@ -186,7 +186,7 @@ export default function Navbar() {
                         initial={{ opacity: 0, y: -10, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.97 }}
-                        className="absolute top-[80px] left-4 right-4 p-6 bg-surface-card backdrop-blur-xl border border-stroke rounded-2xl shadow-2xl lg:hidden z-50"
+                        className="absolute top-[80px] left-4 right-4 p-6 bg-surface-card backdrop-blur-xl border border-stroke rounded-2xl shadow-2xl lg:hidden z-50 pointer-events-auto"
                     >
                         <div className="flex flex-col gap-2">
                             {navLinks.map(link => (

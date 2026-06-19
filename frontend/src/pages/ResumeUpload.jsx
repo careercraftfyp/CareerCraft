@@ -112,8 +112,8 @@ export default function ResumeUpload({ embedded = false }) {
             {!embedded && (
                 <>
                     {/* Background Accents */}
-                    <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand/5 blur-[120px] rounded-full animate-float-slow" />
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-secondary-500/5 blur-[120px] rounded-full animate-float-slow" />
+                    <div className="absolute top-[-10%] left-[-10%] w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-brand/5 blur-[120px] rounded-full animate-float-slow" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-secondary-500/5 blur-[120px] rounded-full animate-float-slow" />
 
                     <div className="max-w-4xl mx-auto relative z-10 mb-16 text-center">
                         <motion.div
@@ -128,7 +128,7 @@ export default function ResumeUpload({ embedded = false }) {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="text-5xl md:text-7xl font-black text-content-base mb-8 tracking-tighter leading-none italic uppercase"
+                            className="text-4xl md:text-7xl font-black text-content-base mb-8 tracking-tighter leading-none italic uppercase"
                         >
                             Analyze <span className="gradient-text">Resume</span>
                         </motion.h1>
@@ -136,7 +136,7 @@ export default function ResumeUpload({ embedded = false }) {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="text-xl text-content-muted font-medium leading-relaxed max-w-2xl mx-auto"
+                            className="text-lg md:text-xl text-content-muted font-medium leading-relaxed max-w-2xl mx-auto"
                         >
                             Upload your resume to receive AI-powered feedback, ATS optimization tips, and actionable improvements.
                         </motion.p>

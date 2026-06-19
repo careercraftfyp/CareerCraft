@@ -80,7 +80,7 @@ export default function Pricing() {
                                 backgroundColor: 'var(--surface-hover)'
                             }}
                             transition={{ duration: 0.15 }}
-                            className={`flex flex-col relative card p-10 ${plan.popular ? 'border-brand/20 bg-surface-card shadow-2xl shadow-brand-glow scale-105 z-20' : 'border-stroke/50'
+                            className={`flex flex-col relative card p-10 ${plan.popular ? 'border-brand/20 bg-surface-card shadow-2xl shadow-brand-glow lg:scale-105 z-20' : 'border-stroke/50'
                                 }`}
                         >
                             {plan.popular && (

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight, AlertCircle, Loader2, Sparkles, Rocket, CheckCircle2, Eye } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, AlertCircle, Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -165,11 +165,11 @@ export default function SignUp() {
                                             />
                                             <button
                                                 type="button"
-                                                onMouseEnter={() => setShowPassword(true)}
-                                                onMouseLeave={() => setShowPassword(false)}
+                                                onClick={() => setShowPassword(v => !v)}
                                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-content-muted hover:text-brand transition-colors cursor-pointer"
+                                                aria-label={showPassword ? 'Hide password' : 'Show password'}
                                             >
-                                                <Eye className="w-5 h-5" />
+                                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                             </button>
                                         </div>
                                     </div>

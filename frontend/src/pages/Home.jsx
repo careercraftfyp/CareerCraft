@@ -71,13 +71,13 @@ const Home = () => (
                         Know exactly where you stand.
                     </div>
 
-                    <h1 className="text-5xl md:text-7xl font-black mb-8 leading-tight tracking-tighter">
+                    <h1 className="text-4xl sm:text-5xl md:text-7xl font-black mb-8 leading-tight tracking-tighter">
                         <span className="text-brand">Get the job</span>
                         <br />
                         <span className="text-content-base">you actually want.</span>
                     </h1>
 
-                    <p className="text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-medium text-content-muted">
+                    <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-medium text-content-muted">
                         See exactly how your resume scores against hiring filters. Practice the hard questions until you know the answers cold.
                     </p>
 
@@ -111,14 +111,14 @@ const Home = () => (
 
         {/* ── Features ── */}
         <section className="py-32 bg-surface-base relative border-y border-stroke overflow-hidden">
-            <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-brand/5 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute top-0 right-1/4 w-full max-w-[600px] aspect-square bg-brand/5 blur-[120px] rounded-full pointer-events-none" />
             
             <div className="max-w-6xl mx-auto px-6 relative z-10">
                 <motion.div
                     initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }} viewport={{ once: true }}
                     className="mb-20 max-w-2xl">
-                    <h2 className="text-5xl font-black tracking-tight mb-6 text-content-base leading-tight">
+                    <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6 text-content-base leading-tight">
                         Stop guessing. <br/><span className="text-brand">Start practicing.</span>
                     </h2>
                     <p className="text-xl font-medium text-content-muted leading-relaxed">
@@ -158,7 +158,7 @@ const Home = () => (
                     <motion.div
                         initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.8 }} viewport={{ once: true }}>
-                        <h2 className="text-4xl font-black mb-6 tracking-tight text-content-base">
+                        <h2 className="text-3xl md:text-4xl font-black mb-6 tracking-tight text-content-base">
                             Know exactly <span className="text-brand">where you stand.</span>
                         </h2>
                         <p className="text-lg mb-8 leading-relaxed font-medium text-content-muted">
@@ -237,16 +237,16 @@ const Home = () => (
                     }}
                     transition={{ duration: 0.3 }}
                     viewport={{ once: true }}
-                    className="p-16 md:p-24 rounded-[48px] bg-gradient-to-b from-surface-card to-surface-base border border-stroke text-center relative overflow-hidden shadow-2xl cursor-default">
+                    className="p-8 sm:p-16 md:p-24 rounded-[32px] md:rounded-[48px] bg-gradient-to-b from-surface-card to-surface-base border border-stroke text-center relative overflow-hidden shadow-2xl cursor-default">
                     
                     {/* Inner glowing orb */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-brand/10 blur-[120px] pointer-events-none rounded-[100%]" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] md:w-[800px] h-[300px] md:h-[400px] bg-brand/10 blur-[120px] pointer-events-none rounded-[100%]" />
 
                     <Zap className="w-16 h-16 text-brand mx-auto mb-8 relative z-10 drop-shadow-[0_0_15px_rgba(224,180,178,0.5)]" />
-                    <h2 className="text-5xl md:text-6xl font-black text-content-base mb-8 tracking-tight relative z-10">
+                    <h2 className="text-4xl md:text-6xl font-black text-content-base mb-8 tracking-tight relative z-10">
                         Ready to prove your skills?
                     </h2>
-                    <p className="text-2xl mb-12 max-w-2xl mx-auto font-medium text-content-muted relative z-10">
+                    <p className="text-lg sm:text-2xl mb-12 max-w-2xl mx-auto font-medium text-content-muted relative z-10">
                         Stop guessing what recruiters want. Start practicing with instant, actionable feedback.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
