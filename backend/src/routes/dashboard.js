@@ -3,9 +3,14 @@ import { supabase } from '../lib/supabase.js';
 
 const router = express.Router();
 
-// Mock auth middleware
-const mockAuth = (req, res, next) => {
-    req.user = { id: '00000000-0000-0000-0000-000000000000' };
+// Dynamic Mock Auth: Fetches a valid user to satisfy foreign key constraints
+const mockAuth = async (req, res, next) => {
+    try {
+        const { data } = await supabase.from('users').select('id').limit(1);
+        req.user = { id: data?.[0]?.id || '00000000-0000-0000-0000-000000000000' };
+    } catch(e) {
+        req.user = { id: '00000000-0000-0000-0000-000000000000' };
+    }
     next();
 };
 
@@ -25,30 +30,42 @@ router.get('/stats', mockAuth, async (req, res) => {
             .select('evaluation, created_at, status')
             .eq('user_id', userId);
 
-        if (resumeError || interviewError) {
-            throw new Error(resumeError?.message || interviewError?.message);
+        if (resumeError && resumeError.code !== 'PGRST205') {
+            console.error(resumeError);
+        }
+        if (interviewError && interviewError.code !== 'PGRST205') {
+            console.error(interviewError);
         }
 
-        const completedInterviews = interviews.filter(i => i.status === 'completed');
+        const completedInterviews = (interviews || []).filter(i => i.status === 'completed');
 
         // 3. Fetch all resumes for ATS trend
         const { data: resumes, error: resumesDataError } = await supabase
             .from('resumes')
-            .select('analysis, created_at')
+            .select('parsed_text, created_at')
             .eq('user_id', userId)
             .order('created_at', { ascending: true });
 
         // Calculate average ATS score
         let totalAtsScore = 0;
-        resumes.forEach(r => {
-            totalAtsScore += r.analysis.overall_score || 0;
+        const safeResumes = resumes || [];
+        safeResumes.forEach(r => {
+            try {
+                if (r.parsed_text && r.parsed_text.startsWith('{')) {
+                    const parsed = JSON.parse(r.parsed_text);
+                    r.analysis = parsed.analysis || {};
+                }
+            } catch (e) {
+                r.analysis = {};
+            }
+            totalAtsScore += r.analysis?.overall_score || 0;
         });
-        const avgAtsScore = resumes.length > 0 ? Math.round(totalAtsScore / resumes.length) : 0;
+        const avgAtsScore = safeResumes.length > 0 ? Math.round(totalAtsScore / safeResumes.length) : 0;
 
         // Prepare ATS Trend Data (last 4 uploads or weekly)
-        const atsTrend = resumes.slice(-4).map((r, i) => ({
+        const atsTrend = safeResumes.slice(-4).map((r, i) => ({
             name: `Upload ${i + 1}`,
-            score: r.analysis.overall_score
+            score: r.analysis?.overall_score || 0
         }));
 
         // Prepare Interview Scores (from latest interview)
@@ -75,10 +92,13 @@ router.get('/stats', mockAuth, async (req, res) => {
             .select('status')
             .eq('user_id', userId);
 
-        if (practiceError) throw practiceError;
+        if (practiceError && practiceError.code !== 'PGRST205') {
+            console.error(practiceError);
+        }
 
-        const completedPractice = practiceSessions.filter(p => p.status === 'completed').length;
-        const totalPractice = practiceSessions.length;
+        const safePractice = practiceSessions || [];
+        const completedPractice = safePractice.filter(p => p.status === 'completed').length;
+        const totalPractice = safePractice.length;
         const trainingProgress = totalPractice > 0 ? Math.round((completedPractice / totalPractice) * 100) : 0;
 
         res.json({

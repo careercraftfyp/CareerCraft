@@ -15,8 +15,16 @@ const DEFAULT_PERSONA_ID = 'pdac61133ac5';
 const DEFAULT_REPLICA_ID = 'r5f0577fc829';
 
 // Middleware to mock auth for now
-const mockAuth = (req, res, next) => {
-    req.user = { id: '00000000-0000-0000-0000-000000000000', name: 'Candidate' };
+const mockAuth = async (req, res, next) => {
+    try {
+        const { data } = await supabase.from('users').select('id, full_name').limit(1);
+        req.user = { 
+            id: data?.[0]?.id || '00000000-0000-0000-0000-000000000000',
+            name: data?.[0]?.full_name || 'Candidate'
+        };
+    } catch(e) {
+        req.user = { id: '00000000-0000-0000-0000-000000000000', name: 'Candidate' };
+    }
     next();
 };
 
@@ -133,12 +141,7 @@ router.post('/initialize', mockAuth, async (req, res) => {
                 participant_left_timeout: 10,
                 enable_recording: true,
                 apply_greenscreen: false,
-                language: 'english',
-                // AGGRESSIVE LATENCY & SPONTANEITY SETTINGS
-                turn_taking_patience: "low",
-                replica_interruptibility: "high",
-                turn_detection_model: "sparrow-1",
-                replica_is_master: true // If supported, tells replica to lead
+                language: 'english'
             }
         };
 

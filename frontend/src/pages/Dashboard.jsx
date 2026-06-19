@@ -30,6 +30,18 @@ export default function Dashboard() {
 
     const [liveStats, setLiveStats] = useState(null);
     const [loadingStats, setLoadingStats] = useState(true);
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (profileRef.current && !profileRef.current.contains(event.target)) {
+                setIsProfileOpen(false);
+            }
+            if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+                setIsNotificationsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -45,18 +57,16 @@ export default function Dashboard() {
             }
         };
 
-        fetchStats();
-        const handleClickOutside = (event) => {
-            if (profileRef.current && !profileRef.current.contains(event.target)) {
-                setIsProfileOpen(false);
-            }
-            if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
-                setIsNotificationsOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+        if (activeTab === 'Overview') {
+            fetchStats();
+        }
+        
+        if (activeTab === 'Resume Analyzer' && history.length === 0) {
+            fetchHistory();
+        }
+        
+        // Also refetch history if we navigate to Overview and want to see history (optional, dashboard auto-updates)
+    }, [activeTab]);
 
     const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
     const userInitial = userName.charAt(0).toUpperCase();
@@ -128,6 +138,7 @@ export default function Dashboard() {
                     onClick={() => {
                         setViewMode('overview');
                         setSelectedResume(null);
+                        setActiveTab('Overview');
                     }}
                     className="flex items-center gap-2 text-dark-400 hover:text-white transition-colors font-bold uppercase tracking-widest text-[10px] bg-dark-800 px-4 py-2 rounded-xl border border-dark-700"
                 >
@@ -366,7 +377,16 @@ export default function Dashboard() {
             case 'Overview':
                 return renderOverview();
             case 'Resume Analyzer':
-                return <ResumeUpload embedded={true} />;
+                return (
+                    <div className="space-y-12 pb-16">
+                        <ResumeUpload embedded={true} />
+                        <div className="border-t border-dark-800 pt-16 mt-8">
+                            <div className="max-w-5xl mx-auto px-4">
+                                {renderHistory()}
+                            </div>
+                        </div>
+                    </div>
+                );
             case 'Interview Prep':
                 return (
                     <motion.div

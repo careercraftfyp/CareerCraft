@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import { PDFParse as pdf } from 'pdf-parse';
 import OpenAI from 'openai';
+import { parseResume } from '../utils/atsParser.js';
 import { supabase } from '../lib/supabase.js';
 import dotenv from 'dotenv';
 
@@ -25,8 +26,13 @@ const upload = multer({
     }
 });
 
-const mockAuth = (req, res, next) => {
-    req.user = { id: '00000000-0000-0000-0000-000000000000' };
+const mockAuth = async (req, res, next) => {
+    try {
+        const { data } = await supabase.from('users').select('id').limit(1);
+        req.user = { id: data?.[0]?.id || '00000000-0000-0000-0000-000000000000' };
+    } catch(e) {
+        req.user = { id: '00000000-0000-0000-0000-000000000000' };
+    }
     next();
 };
 
@@ -43,6 +49,16 @@ router.get('/latest', mockAuth, async (req, res) => {
             .single();
 
         if (error && error.code !== 'PGRST116') throw error; // PGRST116 is 'no rows returned'
+        
+        if (data) {
+            try {
+                if (data.parsed_text && data.parsed_text.startsWith('{')) {
+                    const parsed = JSON.parse(data.parsed_text);
+                    data.analysis = parsed.analysis || {};
+                    data.full_text = parsed.extractedText || '';
+                }
+            } catch (e) {}
+        }
         res.json(data || null);
     } catch (error) {
         console.error('Error fetching latest resume:', error);
@@ -61,7 +77,17 @@ router.get('/', mockAuth, async (req, res) => {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
-        res.json(data);
+        
+        const processedData = data.map(r => {
+            try {
+                if (r.parsed_text && r.parsed_text.startsWith('{')) {
+                    const parsed = JSON.parse(r.parsed_text);
+                    return { ...r, analysis: parsed.analysis || {}, full_text: parsed.extractedText || '' };
+                }
+            } catch (e) {}
+            return { ...r, analysis: {}, full_text: r.parsed_text || '' };
+        });
+        res.json(processedData);
     } catch (error) {
         console.error('Error fetching resume history:', error);
         res.status(500).json({ error: 'Failed to fetch history' });
@@ -84,48 +110,61 @@ router.post('/upload', mockAuth, upload.single('resume'), async (req, res) => {
             return res.status(400).json({ error: 'Resume content is too short or could not be read.' });
         }
 
-        // 2. AI Analysis via OpenAI - Strict ATS mode
-        const prompt = `
-            You are an ultra-strict, enterprise-grade Applicant Tracking System (ATS) and a top-tier executive career coach.
-            Your job is to relentlessly analyze the provided resume text against modern ATS compatibility standards and industry best practices.
-            Do not be polite; be brutally honest and highly analytical to ensure maximum optimization.
+        // 2. ATS Algorithmic Analysis (Strict deterministic scoring)
+        const analysis = parseResume(extractedText);
 
-            Resume Text:
-            """
-            ${extractedText}
-            """
+        if (!analysis) {
+            return res.status(500).json({ error: 'Failed to parse resume optimally.' });
+        }
 
-            Provide a comprehensive, highly structured JSON report. The JSON MUST exactly match the following structure:
-            {
-                "overall_score": 0-100, // Be extremely strict. A 70 is average, 90+ is exceptional.
-                "ats_compatibility_score": 0-100, // How well it parses. Look for hidden characters, weird formatting, or lack of standard sections.
-                "impact_score": 0-100, // How well achievements are quantified (metrics, $, %, time).
-                "action_verbs_score": 0-100, // Usage of strong, varied action verbs to start bullet points.
-                "field_of_expertise": "string", // Best guess at their industry/role.
-                "top_skills": ["string", "string"], // Up to 5 core hard skills detected.
-                "missing_critical_keywords": ["string"], // Industry-standard keywords they likely missed for a senior role in their field.
-                "critical_errors": [
-                    { "issue": "string", "fix": "string" }
-                ], // MAJOR issues: missing contact info, unparseable sections, generic summaries, lack of metrics.
-                "formatting_warnings": [
-                    "string"
-                ], // MINOR issues: inconsistent dates, passive voice, weak verbs, overused buzzwords.
-                "actionable_feedback": [
-                    "string"
-                ] // Specific, targeted advice on how to rewrite specific sentences for higher impact.
+        // 3. AI Qualitative Feedback (OpenAI)
+        try {
+            const prompt = `
+                You are an elite career coach and ATS optimization expert. 
+                I have already scored this resume algorithmically. Your job is ONLY to provide personalized, qualitative feedback based on the exact text.
+                Identify critical missing keywords, layout/formatting warnings, and specific actionable rewrite suggestions.
+
+                Resume Text:
+                """
+                ${extractedText.substring(0, 4000)}
+                """
+
+                Output exactly this JSON structure:
+                {
+                    "missing_critical_keywords": ["string"],
+                    "critical_errors": [
+                        { "issue": "string", "fix": "string" }
+                    ],
+                    "formatting_warnings": ["string"],
+                    "actionable_feedback": ["string"]
+                }
+            `;
+
+            const response = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [
+                    { role: "system", content: "You output only structured JSON containing personalized resume feedback." },
+                    { role: "user", content: prompt }
+                ],
+                response_format: { type: "json_object" }
+            });
+
+            const aiFeedback = JSON.parse(response.choices[0].message.content);
+            
+            // Merge AI qualitative feedback with deterministic scores
+            analysis.missing_critical_keywords = [...new Set([...analysis.missing_critical_keywords, ...(aiFeedback.missing_critical_keywords || [])])].filter(k => k !== "N/A");
+            analysis.critical_errors = [...analysis.critical_errors, ...(aiFeedback.critical_errors || [])];
+            analysis.formatting_warnings = [...analysis.formatting_warnings, ...(aiFeedback.formatting_warnings || [])];
+            
+            // Override the generic actionable feedback with AI's personalized feedback
+            if (aiFeedback.actionable_feedback && aiFeedback.actionable_feedback.length > 0) {
+                analysis.actionable_feedback = aiFeedback.actionable_feedback;
             }
-        `;
 
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-                { role: "system", content: "You are a merciless, highly analytical ATS parsing engine and elite career coach. You ONLY output valid JSON matching the exact requested structure." },
-                { role: "user", content: prompt }
-            ],
-            response_format: { type: "json_object" }
-        });
-
-        const analysis = JSON.parse(response.choices[0].message.content);
+        } catch (aiError) {
+            console.error("AI feedback generation failed, falling back to algorithmic feedback only:", aiError);
+            // It will just use the algorithmic responses generated by parseResume if OpenAI fails
+        }
 
         // 3. Save to Supabase DB
         const { error: dbError } = await supabase
@@ -133,8 +172,8 @@ router.post('/upload', mockAuth, upload.single('resume'), async (req, res) => {
             .insert([{
                 user_id: req.user.id,
                 file_name: req.file.originalname,
-                analysis: analysis,
-                full_text: extractedText.substring(0, 5000) // Increased limit for history
+                storage_path: 'local', // Required mapping for actual schema
+                parsed_text: JSON.stringify({ extractedText: extractedText.substring(0, 5000), analysis }) // Schema Bypass
             }]);
 
         if (dbError) {
