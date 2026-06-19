@@ -36,6 +36,7 @@ export default function Dashboard() {
     const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
     const [liveStats, setLiveStats] = useState(null);
     const [loadingStats, setLoadingStats] = useState(true);
+    const [pendingDrills, setPendingDrills] = useState(0);
     
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -66,7 +67,21 @@ export default function Dashboard() {
                 setLoadingStats(false);
             }
         };
-        if (activeTab === 'Overview') fetchStats();
+        const fetchPendingDrills = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const token = session?.access_token;
+                const res = await fetch(`${API_URL}/training/drills`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const pending = (data.drills || []).filter(d => d.status !== 'completed').length;
+                    setPendingDrills(pending);
+                }
+            } catch (err) { /* Non-critical */ }
+        };
+        if (activeTab === 'Overview') { fetchStats(); fetchPendingDrills(); }
         if (activeTab === 'Resume Analyzer' && history.length === 0) fetchHistory();
     }, [activeTab]);
 
@@ -325,6 +340,34 @@ export default function Dashboard() {
                             </div>
                         )}
                     </motion.div>
+
+                    {/* Pending Drills Banner — Only shown if there are incomplete drills */}
+                    {pendingDrills > 0 && (
+                        <motion.div
+                            initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{delay: 0.6}}
+                            className="lg:col-span-12 card-bento p-6 bg-surface-card flex items-center justify-between gap-6 border-brand/30 bg-brand/5 hover:-translate-y-0.5 transition-transform"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-brand/20 border border-brand/30 flex items-center justify-center shrink-0">
+                                    <Zap className="w-6 h-6 text-brand" />
+                                </div>
+                                <div>
+                                    <h4 className="font-black text-content-base tracking-tight">
+                                        {pendingDrills} Pending Drill{pendingDrills !== 1 ? 's' : ''} Waiting
+                                    </h4>
+                                    <p className="text-xs text-content-muted font-medium mt-0.5">
+                                        AI-generated practice exercises are ready for you in the Training Hub.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setActiveTab('Training Hub')}
+                                className="btn-primary shrink-0 whitespace-nowrap"
+                            >
+                                Go to Practice Hub <ArrowRight className="w-4 h-4 ml-1" />
+                            </button>
+                        </motion.div>
+                    )}
                 </div>
             )}
         </div>

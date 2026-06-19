@@ -403,6 +403,11 @@ router.get('/:sessionId/report', requireAuth, async (req, res) => {
 /**
  * Route: Get AI Training Recommendations
  * GET /api/interviews/recommendations
+ * Generates personalized drills based on interview performance:
+ *  - communicationScore low  → speaking/confidence exercises
+ *  - domain_knowledge weak + CS/tech field → short code-debug exercises
+ *  - structure weak → story-structuring drills
+ *  - reasoning weak → analytical puzzles
  */
 router.get('/recommendations', requireAuth, async (req, res) => {
     try {
@@ -422,63 +427,94 @@ router.get('/recommendations', requireAuth, async (req, res) => {
         if (!interviews || interviews.length === 0) {
             return res.json({
                 recommendations: [],
-                message: 'No completed interviews found to analyze. Start a mock interview to get recommendations!'
+                weakAreas: [],
+                message: 'No completed interviews found. Start a mock interview to activate personalized training!'
             });
         }
 
-        // 2. Aggregate feedback for AI analysis
-        const feedbackSummary = interviews.map((i, idx) => ({
+        // 2. Build performance summary
+        const feedbackSummary = interviews.map(i => ({
             role: i.job_role,
-            scores: i.evaluation,
-            strengths: i.evaluation.strengths,
-            improvements: i.evaluation.improvements
+            field: i.job_field,
+            overallScore: i.evaluation?.overallScore,
+            communicationScore: i.evaluation?.communicationScore,
+            contentRelevanceScore: i.evaluation?.contentRelevanceScore,
+            strengths: i.evaluation?.strengths || [],
+            improvements: i.evaluation?.improvements || []
         }));
 
-        // 3. Ask OpenAI to generate targeted exercises
+        const jobField = interviews[0]?.job_field || 'General';
+        const jobRole = interviews[0]?.job_role || '';
+
+        const isTechField = ['computer science', 'software', 'data science', 'engineering', 'developer', 'programmer', 'coding'].some(kw =>
+            jobField.toLowerCase().includes(kw) || jobRole.toLowerCase().includes(kw)
+        );
+
+        // 3. Generate smart, contextual exercises via OpenAI
         const recommendationPrompt = `
-You are an elite AI Career Coach. Analyze the following interview performance history of a candidate:
+You are an elite AI Career Coach. A candidate has completed ${interviews.length} mock interview(s).
+
+Performance History:
 ${JSON.stringify(feedbackSummary, null, 2)}
 
-Identify the candidate's top 2 recurring weaknesses. 
-For each weakness, generate one highly specific, actionable practice exercise.
-The response MUST be a valid JSON object matching this structure:
+Job Field: ${jobField} | Is Technical/CS Field: ${isTechField}
+
+TASK: Identify the 2 biggest weaknesses and generate 2 highly targeted training exercises.
+
+STRICT EXERCISE TYPE RULES:
+- If communicationScore < 65 OR "communication" is in improvements → Use exercise_type: "speaking_drill"
+  The scenario MUST include: (a) an exact spoken script/prompt to practice out loud, (b) a step-by-step speaking routine (e.g., "Record yourself for 60s saying X, then replay and note filler words").
+- If (domain_knowledge OR technical skill) weak AND isTechField=true → Use exercise_type: "code_debug"
+  The scenario MUST include: a real buggy code snippet (8-15 lines, Python or JavaScript) with a clearly stated bug goal. Include line numbers. Make the bug realistic (off-by-one, wrong variable, missing return, type error, etc.).
+- If structure/organization is weak → Use exercise_type: "story_structure"
+  The scenario MUST include: 5-6 scrambled story bullet points that the candidate must reorder into a coherent STAR format.
+- If reasoning/logic is weak → Use exercise_type: "analytical_puzzle"
+  The scenario MUST include: a short case study or logical puzzle (3-5 sentences) the candidate must reason through.
+
+Each exercise MUST have these exact fields:
 {
-    "weakAreas": ["string"],
-    "exercises": [
-        {
-            "area_of_focus": "string",
-            "exercise_type": "behavioral | technical_drill | structured_response",
-            "title": "string",
-            "description": "string",
-            "scenario": "string",
-            "targeted_advice": "string"
-        }
-    ]
+  "area_of_focus": "string (e.g., 'Communication Confidence', 'Code Debugging', 'Answer Structure')",
+  "exercise_type": "speaking_drill | code_debug | story_structure | analytical_puzzle | behavioral",
+  "skill_tag": "communication | domain_knowledge | structure | reasoning",
+  "difficulty_level": <1-5: 1=very easy, 5=expert. Base it on scores: score<50→1-2, 50-70→3, >70→4-5>,
+  "domain": "${jobField}",
+  "title": "string (catchy, specific drill name)",
+  "description": "string (2-3 sentences explaining what the drill is, why it helps this person specifically)",
+  "scenario": "string (the ACTUAL exercise content — the script, code, scrambled bullets, or puzzle)",
+  "steps": ["step 1", "step 2", "step 3", "step 4"] (3-5 concrete action steps to complete this exercise),
+  "targeted_advice": "string (coach's secret tip — for code_debug reveal the exact bug & fix; for speaking give the ideal answer framework with keywords)"
+}
+
+Return ONLY this JSON:
+{
+  "weakAreas": ["area1", "area2"],
+  "exercises": [ ...2 exercises... ]
 }`;
 
         const aiResponse = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
-            messages: [{
-                role: 'system',
-                content: 'You are a precise and helpful AI Career Coach specialized in interview preparation.'
-            }, {
-                role: 'user',
-                content: recommendationPrompt
-            }],
+            messages: [
+                { role: 'system', content: 'You are a specialized AI Career Coach. Generate precise, field-appropriate interview training exercises. Always follow the exercise_type rules exactly.' },
+                { role: 'user', content: recommendationPrompt }
+            ],
             response_format: { type: "json_object" }
         });
 
         const recData = JSON.parse(aiResponse.choices[0].message.content);
 
-        // 4. Save generated exercises to practice_sessions
-        const practiceEntries = recData.exercises.map(ex => ({
+        // 4. Save exercises to practice_sessions table
+        const practiceEntries = (recData.exercises || []).map(ex => ({
             user_id: userId,
             area_of_focus: ex.area_of_focus,
             exercise_type: ex.exercise_type,
+            skill_tag: ex.skill_tag || 'communication',
+            difficulty_level: ex.difficulty_level || 2,
+            domain: ex.domain || jobField,
             content: {
                 title: ex.title,
                 description: ex.description,
                 scenario: ex.scenario,
+                steps: ex.steps || [],
                 targeted_advice: ex.targeted_advice
             }
         }));
@@ -490,11 +526,10 @@ The response MUST be a valid JSON object matching this structure:
 
         if (saveErr) {
             console.error('Error saving practice sessions:', saveErr);
-            // Return generated data even if save fails
         }
 
         res.json({
-            weakAreas: recData.weakAreas,
+            weakAreas: recData.weakAreas || [],
             recommendations: savedSessions || practiceEntries
         });
 

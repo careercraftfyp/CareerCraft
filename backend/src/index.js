@@ -7,6 +7,7 @@ import userRoutes from './routes/users.js';
 import resumeRoutes from './routes/resumes.js';
 import interviewRoutes from './routes/interviews.js';
 import dashboardRoutes from './routes/dashboard.js';
+import trainingRoutes from './routes/training.js';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/resumes', resumeRoutes);
 app.use('/api/interviews', interviewRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/training', trainingRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'CareerCraft AI Backend is running' });

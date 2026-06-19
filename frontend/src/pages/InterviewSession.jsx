@@ -610,6 +610,13 @@ export default function InterviewSession() {
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
                 });
+
+                // Fire-and-forget: pre-generate new practice drills in the background
+                try {
+                    fetch(`${API_URL}/interviews/recommendations`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).catch(() => {}); // silently ignore errors
+                } catch (_) {}
             }
 
         } catch (err) {
