@@ -218,6 +218,11 @@ import FormData from 'form-data';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const upload = multer({ dest: os.tmpdir() });
 
@@ -267,13 +272,43 @@ router.post('/:sessionId/evaluate', requireAuth, upload.single('audio'), async (
         const audioPath = `${file.path}.webm`;
         fs.renameSync(file.path, audioPath);
 
-        // 2. Transcribe Audio using Whisper API
+        // 2. Transcribe Audio and Analyze Acoustics Concurrently
         const audioStream = fs.createReadStream(audioPath);
-        const transcription = await openai.audio.transcriptions.create({
-            file: audioStream,
-            model: 'whisper-1',
-            language: 'en'
+        
+        const pythonScriptPath = path.join(__dirname, '../utils/audio_analyzer.py');
+        const acousticAnalysisPromise = new Promise((resolve) => {
+            // Use 'python3' or 'python' based on environment, usually 'python' works on windows/venv
+            const pythonProcess = spawn('python', [pythonScriptPath, audioPath]);
+            let dataString = '';
+            
+            pythonProcess.stdout.on('data', (data) => {
+                dataString += data.toString();
+            });
+            
+            pythonProcess.on('close', (code) => {
+                try {
+                    const result = JSON.parse(dataString);
+                    resolve(result);
+                } catch (e) {
+                    console.error('Failed to parse python acoustic analysis output:', dataString);
+                    resolve({ status: 'error', error_message: 'Failed to parse output' });
+                }
+            });
+            
+            pythonProcess.on('error', (err) => {
+                console.error('Failed to start python script:', err);
+                resolve({ status: 'error', error_message: 'Python script failed to start' });
+            });
         });
+
+        const [transcription, acousticAnalysis] = await Promise.all([
+            openai.audio.transcriptions.create({
+                file: audioStream,
+                model: 'whisper-1',
+                language: 'en'
+            }),
+            acousticAnalysisPromise
+        ]);
 
         const transcript = transcription.text;
         console.log('Transcription successful:', transcript);
@@ -283,6 +318,17 @@ router.post('/:sessionId/evaluate', requireAuth, upload.single('audio'), async (
 
         if (!transcript || transcript.trim().length === 0) {
             return res.status(400).json({ error: 'No speech detected in audio.' });
+        }
+
+        let acousticText = '';
+        if (acousticAnalysis.status === 'success') {
+            acousticText = `
+The following is the NLP acoustic analysis of the candidate's actual voice recording:
+- Speech Rate: ${acousticAnalysis.estimated_syllables_per_minute} syllables/min (${acousticAnalysis.speech_rate_category})
+- Tone/Emotion: ${acousticAnalysis.tone_analysis}
+- Pauses/Hesitations Detected: ${acousticAnalysis.pauses_detected} (Long hesitations: ${acousticAnalysis.long_hesitations})
+
+IMPORTANT: Use this acoustic analysis to inform the "communicationScore", "strengths", and "improvements". If they are monotone or have many long hesitations, reduce the communication score and note it in improvements. If their speech rate is Optimal and tone is Dynamic, praise it in strengths.`;
         }
 
         // 2. Evaluate Transcript using OpenAI
@@ -296,11 +342,12 @@ ${session.questions ? session.questions.map((q, i) => `${i + 1}. ${q}`).join('\n
 
 The following is the raw speech transcript from the candidate's audio:
 "${transcript}"
+${acousticText}
 
 Provide a comprehensive, objective performance report. Your response MUST be a valid JSON object matching the following structure exactly:
 {
     "overallScore": <integer between 0-100 representing overall performance>,
-    "communicationScore": <integer between 0-100 based on clarity and articulation>,
+    "communicationScore": <integer between 0-100 based on clarity, articulation, and vocal delivery>,
     "contentRelevanceScore": <integer between 0-100 based on answering the questions asked>,
     "strengths": [<array of 2-3 strings highlighting strengths>],
     "improvements": [<array of 2-3 actionable areas for improvement>],
@@ -322,6 +369,9 @@ Provide a comprehensive, objective performance report. Your response MUST be a v
         let evaluationData;
         try {
             evaluationData = JSON.parse(evaluationResponse.choices[0].message.content);
+            if (acousticAnalysis.status === 'success') {
+                evaluationData.acousticAnalysis = acousticAnalysis;
+            }
         } catch (e) {
             console.error('Failed to parse evaluation JSON', e);
             throw new Error('Failed to parse evaluation output from AI');

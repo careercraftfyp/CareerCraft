@@ -16,6 +16,7 @@ import Profile from './pages/Profile';
 import InterviewReport from './pages/InterviewReport';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import AdminPanel from './pages/AdminPanel';
 
 function App() {
   return (
@@ -34,8 +35,13 @@ function App() {
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
-
               {/* Protected Routes */}
+              <Route path="/cc-admin" element={
+                <ProtectedRoute>
+                  <AdminPanel />
+                </ProtectedRoute>
+              } />
+              
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />

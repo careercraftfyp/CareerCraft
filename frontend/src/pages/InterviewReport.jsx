@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
     CheckCircle, AlertCircle, Loader2, ArrowLeft,
-    BarChart3, MessageSquare, Target, Zap
+    BarChart3, MessageSquare, Target, Zap, Activity, Mic, Clock
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -218,6 +218,42 @@ export default function InterviewReport() {
                         </ul>
                     </motion.div>
                 </div>
+
+                {/* Acoustic Analysis (if available) */}
+                {report.acousticAnalysis && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.55 }}
+                        className="mt-6 card-bento p-8 shadow-xl border-white/5"
+                    >
+                        <h3 className="text-content-muted text-xs font-black uppercase tracking-widest mb-6 flex items-center gap-2">
+                            <Mic className="w-4 h-4 text-brand" /> Acoustic Voice Analysis
+                        </h3>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <div className="flex flex-col items-start">
+                                <div className="flex items-center gap-2 mb-2 text-content-base font-bold text-sm uppercase tracking-wider">
+                                    <Activity className="w-4 h-4 text-brand" /> Speech Rate
+                                </div>
+                                <div className="text-2xl font-black text-content-base">{report.acousticAnalysis.estimated_syllables_per_minute} <span className="text-xs text-content-muted">syl/min</span></div>
+                                <div className="text-sm text-content-muted mt-1">{report.acousticAnalysis.speech_rate_category}</div>
+                            </div>
+                            <div className="flex flex-col items-start">
+                                <div className="flex items-center gap-2 mb-2 text-content-base font-bold text-sm uppercase tracking-wider">
+                                    <Zap className="w-4 h-4 text-secondary-400" /> Voice Tone
+                                </div>
+                                <div className="text-lg font-black text-content-base leading-tight mt-1">{report.acousticAnalysis.tone_analysis}</div>
+                            </div>
+                            <div className="flex flex-col items-start">
+                                <div className="flex items-center gap-2 mb-2 text-content-base font-bold text-sm uppercase tracking-wider">
+                                    <Clock className="w-4 h-4 text-amber-400" /> Hesitations
+                                </div>
+                                <div className="text-2xl font-black text-content-base">{report.acousticAnalysis.pauses_detected} <span className="text-xs text-content-muted">pauses</span></div>
+                                <div className="text-sm text-content-muted mt-1">{report.acousticAnalysis.long_hesitations > 0 ? `${report.acousticAnalysis.long_hesitations} long hesitations` : 'No long hesitations'}</div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
 
                 {/* AI Feedback */}
                 <motion.div

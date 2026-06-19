@@ -75,7 +75,7 @@ export default function Contact() {
                             Get in <span className="gradient-text">Touch</span>
                         </h1>
                         <p className="text-xl text-content-muted font-medium leading-relaxed mb-12">
-                            Have questions or just want to say hi? 
+                            Have questions or just want to say hi?
                             We're here to help you build your perfect career.
                         </p>
 
@@ -130,7 +130,7 @@ export default function Contact() {
                                                     name="name"
                                                     value={formData.name}
                                                     onChange={handleChange}
-                                                    placeholder="Agent Name"
+                                                    placeholder="Name"
                                                     className="input-field"
                                                 />
                                             </div>
@@ -142,14 +142,14 @@ export default function Contact() {
                                                     name="email"
                                                     value={formData.email}
                                                     onChange={handleChange}
-                                                    placeholder="intel@domain.com"
+                                                    placeholder="abc@gmail.com"
                                                     className="input-field"
                                                 />
                                             </div>
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-[10px] text-content-muted font-black uppercase tracking-widest ml-1">Subject</label>
-                                            <select 
+                                            <select
                                                 name="protocol"
                                                 value={formData.protocol}
                                                 onChange={handleChange}

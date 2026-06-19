@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sparkles, LayoutDashboard, LogOut, User as UserIcon, Sun, Moon } from 'lucide-react';
+import { Menu, X, Sparkles, LayoutDashboard, LogOut, User as UserIcon, Sun, Moon, Shield } from 'lucide-react';
 import Logo from './Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,7 +49,7 @@ export default function Navbar() {
         { name: 'Contact', path: '/contact' },
     ];
 
-    if (location.pathname.includes('/dashboard') || location.pathname.includes('/interview')) return null;
+    if (location.pathname.includes('/dashboard') || location.pathname.includes('/interview') || location.pathname.includes('/cc-admin')) return null;
 
     return (
         <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-center transition-all duration-500 ease-in-out pointer-events-none ${scrolled ? 'pt-6 px-6' : 'h-[80px] px-8'}`}>
@@ -127,6 +127,11 @@ export default function Navbar() {
                                         <Link to="/dashboard" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-content-muted hover:text-content-base hover:bg-surface-hover transition-colors">
                                             <LayoutDashboard className="w-4 h-4 text-brand" /> Dashboard
                                         </Link>
+                                        {user?.email === 'careercraftfyp@gmail.com' && (
+                                            <Link to="/cc-admin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-purple-400 hover:text-purple-300 hover:bg-surface-hover transition-colors">
+                                                <Shield className="w-4 h-4" /> Admin Portal
+                                            </Link>
+                                        )}
                                         <div className="h-px bg-stroke my-1"></div>
                                         <button onClick={() => { setIsProfileOpen(false); signOut(); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-colors text-left">
                                             <LogOut className="w-4 h-4" /> Logout
@@ -196,6 +201,11 @@ export default function Navbar() {
                             <div className="h-px bg-stroke my-3" />
                             {user ? (
                                 <div className="grid gap-3">
+                                    {user?.email === 'careercraftfyp@gmail.com' && (
+                                        <Link to="/cc-admin" onClick={() => setIsOpen(false)} className="flex justify-center items-center gap-2 p-3 rounded-xl text-purple-400 font-bold bg-surface-hover border border-purple-500/20 hover:bg-purple-500/10 transition-colors">
+                                            <Shield className="w-4 h-4" /> Admin Portal
+                                        </Link>
+                                    )}
                                     <Link to="/profile" className="flex justify-center items-center gap-2 p-3 rounded-xl text-content-base font-bold bg-surface-hover border border-stroke">
                                         <UserIcon className="w-4 h-4" /> Profile
                                     </Link>

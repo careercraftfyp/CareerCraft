@@ -8,4 +8,17 @@ export default defineConfig({
     tailwindcss(),
     react()
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          recharts: ['recharts'],
+          framer: ['framer-motion'],
+          supabase: ['@supabase/supabase-js'],
+          lucide: ['lucide-react']
+        }
+      }
+    }
+  }
 })

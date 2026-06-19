@@ -15,6 +15,7 @@ CareerCraft AI is a high-performance, neural-themed career preparation ecosystem
 
 ### 🎥 AI Mock Interview Engine
 *   **Adaptive Persona:** AI interviewers that adjust tone and difficulty based on your target role.
+*   **Acoustic NLP Analysis:** Uses a local Python module (Librosa) to analyze your actual voice for speech rate, tone, and hesitations.
 *   **Sentiment Analysis:** Evaluates not just what you say, but your confidence and delivery.
 *   **Instant Evaluation:** Generates a comprehensive skill-dimension scorecard post-session.
 
@@ -50,6 +51,8 @@ CareerCraft AI is a high-performance, neural-themed career preparation ecosystem
 
 ### 1. Prerequisites
 - **Node.js** (v20+ recommended)
+- **Python 3.8+** (Required for acoustic voice analysis)
+- **ffmpeg** (Required on the host machine to process `.webm` audio files)
 - **Supabase Project** (Database + Auth)
 - **OpenAI API Key**
 - **Resend API Key**
@@ -84,10 +87,15 @@ Execute the `supabase_schema.sql` in your Supabase SQL Editor to establish the n
 ### 4. System Launch
 ```bash
 # Start Backend
-cd backend && npm install && npm start
+cd backend
+npm install
+pip install -r requirements.txt
+npm start
 
 # Start Frontend (New Terminal)
-cd frontend && npm install && npm run dev
+cd frontend
+npm install
+npm run dev
 ```
 
 ---

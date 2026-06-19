@@ -51,7 +51,7 @@ export default function Login() {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="min-h-screen bg-surface-base flex items-center justify-center p-6 relative overflow-hidden"
+            className="min-h-screen bg-surface-base flex flex-col items-center justify-center pt-32 pb-12 px-6 relative overflow-hidden"
         >
             {/* Minimal Grid Background */}
             <div className="absolute inset-0 pointer-events-none opacity-20"

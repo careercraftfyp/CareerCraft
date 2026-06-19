@@ -61,7 +61,7 @@ export default function SignUp() {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="min-h-screen flex items-center justify-center bg-surface-base px-4 relative overflow-hidden"
+            className="min-h-screen flex flex-col items-center justify-center bg-surface-base pt-32 pb-12 px-4 relative overflow-hidden"
         >
             {/* Minimal Grid Background */}
             <div className="absolute inset-0 pointer-events-none opacity-20"
