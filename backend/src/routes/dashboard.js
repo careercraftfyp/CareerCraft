@@ -119,13 +119,13 @@ router.get('/stats', requireAuth, async (req, res) => {
                 atsGrowth = 100;
             }
         }
-        
+
         const trainingGrowth = trainingProgress > 0 ? Math.round(trainingProgress / 2) : 0; // estimate
 
-        const lastInterview = completedInterviews.length > 0 
+        const lastInterview = completedInterviews.length > 0
             ? completedInterviews.reduce((latest, current) => {
                 return new Date(current.created_at) > new Date(latest.created_at) ? current : latest;
-              })
+            })
             : null;
 
         res.json({

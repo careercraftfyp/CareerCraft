@@ -199,6 +199,21 @@ router.post('/initialize', requireAuth, aiLimiter, async (req, res) => {
 
         if (!tavusRes.ok) {
             const errText = await tavusRes.text();
+            console.error(`Tavus API error: ${tavusRes.status} - ${errText}`);
+
+            // Mark DB session as failed
+            await supabase.from('interviews').update({ status: 'failed' }).eq('id', dbSession.id);
+
+            // Handle out-of-credits specifically
+            if (tavusRes.status === 402) {
+                return res.status(402).json({
+                    error: 'VIDEO_CREDITS_EXHAUSTED',
+                    message: 'AI video interviews are temporarily unavailable — our video credits are being renewed. In the meantime, use the Training Hub to practice with STAR Builder, Elevator Pitch, and Speaking Drills.',
+                    sessionId: dbSession.id,
+                    questions
+                });
+            }
+
             throw new Error(`Tavus API error: ${tavusRes.status} - ${errText}`);
         }
 

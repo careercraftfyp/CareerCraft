@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-    CheckCircle, AlertCircle, Loader2, ArrowLeft,
+    CheckCircle, AlertCircle, Loader2, ArrowLeft, Download,
     BarChart3, MessageSquare, Target, Zap, Activity, Mic, Clock
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -104,9 +104,14 @@ export default function InterviewReport() {
             <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-brand-glow blur-[120px] rounded-full" />
 
             <div className="max-w-4xl mx-auto relative z-10">
-                <Link to="/dashboard" className="inline-flex items-center gap-2 text-content-muted hover:text-content-base mb-8 transition-colors text-sm font-bold uppercase tracking-wider">
-                    <ArrowLeft className="w-4 h-4" /> Return to Base
-                </Link>
+                <div className="flex justify-between items-center mb-8">
+                    <Link to="/dashboard" className="inline-flex items-center gap-2 text-content-muted hover:text-content-base transition-colors text-sm font-bold uppercase tracking-wider">
+                        <ArrowLeft className="w-4 h-4" /> Return to Base
+                    </Link>
+                    <button onClick={() => window.print()} className="inline-flex items-center gap-2 text-content-muted hover:text-brand transition-colors text-sm font-bold uppercase tracking-wider cursor-pointer">
+                        <Download className="w-4 h-4" /> Download Report
+                    </button>
+                </div>
 
                 <div className="text-center mb-12">
                     <motion.div
@@ -162,7 +167,7 @@ export default function InterviewReport() {
                         </div>
                         <div>
                             <div className="flex justify-between text-sm font-bold uppercase tracking-wider mb-2">
-                                <span className="text-content-base flex items-center gap-2"><BarChart3 className="w-4 h-4 text-secondary-400" /> Content Relevance</span>
+                                <span className="text-content-base flex items-center gap-2"><BarChart3 className="w-4 h-4 text-content-muted" /> Content Relevance</span>
                                 <span className="text-content-base">{report.contentRelevanceScore}%</span>
                             </div>
                             <div className="h-2 w-full bg-surface-card rounded-full overflow-hidden">
@@ -170,7 +175,7 @@ export default function InterviewReport() {
                                     initial={{ width: 0 }}
                                     animate={{ width: `${report.contentRelevanceScore}%` }}
                                     transition={{ duration: 1, delay: 0.6 }}
-                                    className="h-full bg-secondary-500"
+                                    className="h-full bg-content-muted"
                                 />
                             </div>
                         </div>

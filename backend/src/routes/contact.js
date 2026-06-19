@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
         if (process.env.RESEND_API_KEY) {
             try {
                 await resend.emails.send({
-                    from: 'CareerCraft AI <onboarding@resend.dev>',
+                    from: process.env.RESEND_FROM_EMAIL || 'CareerCraft AI <onboarding@resend.dev>',
                     to: process.env.ADMIN_EMAIL || email,
                     subject: `[Inquiry] ${protocol} from ${name}`,
                     html: `

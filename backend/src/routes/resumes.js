@@ -43,7 +43,7 @@ router.get('/latest', requireAuth, async (req, res) => {
             .single();
 
         if (error && error.code !== 'PGRST116') throw error; // PGRST116 is 'no rows returned'
-        
+
         if (data) {
             try {
                 if (data.parsed_text && data.parsed_text.startsWith('{')) {
@@ -51,7 +51,7 @@ router.get('/latest', requireAuth, async (req, res) => {
                     data.analysis = parsed.analysis || {};
                     data.full_text = parsed.extractedText || '';
                 }
-            } catch (e) {}
+            } catch (e) { }
         }
         res.json(data || null);
     } catch (error) {
@@ -71,14 +71,14 @@ router.get('/', requireAuth, async (req, res) => {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
-        
+
         const processedData = data.map(r => {
             try {
                 if (r.parsed_text && r.parsed_text.startsWith('{')) {
                     const parsed = JSON.parse(r.parsed_text);
                     return { ...r, analysis: parsed.analysis || {}, full_text: parsed.extractedText || '' };
                 }
-            } catch (e) {}
+            } catch (e) { }
             return { ...r, analysis: {}, full_text: r.parsed_text || '' };
         });
         res.json(processedData);
@@ -138,7 +138,7 @@ router.post('/upload', requireAuth, aiLimiter, upload.single('resume'), async (r
 
         // 2. ATS Algorithmic Analysis (Strict deterministic scoring)
         progressEmitter.sendProgress(req.user.id, 'heuristic_analysis', 'Running algorithmic parsing rules...');
-        const analysis = parseResume(extractedText);
+        const analysis = await parseResume(extractedText, req.file.buffer);
 
         if (!analysis) {
             return res.status(500).json({ error: 'Failed to parse resume optimally.' });
@@ -146,7 +146,7 @@ router.post('/upload', requireAuth, aiLimiter, upload.single('resume'), async (r
 
         // 3. AI Qualitative Feedback (OpenAI)
         try {
-            progressEmitter.sendProgress(req.user.id, 'ai_evaluation', 'Consulting AI coaching engine (GPT-4o-mini) for detailed grading feedback...');
+            progressEmitter.sendProgress(req.user.id, 'ai_evaluation', 'Consulting AI coaching engine for detailed grading feedback...');
             const prompt = `
                 You are an elite career coach and ATS optimization expert. 
                 I have already scored this resume algorithmically. Your job is ONLY to provide personalized, qualitative feedback based on the exact text.
@@ -178,24 +178,24 @@ router.post('/upload', requireAuth, aiLimiter, upload.single('resume'), async (r
             });
 
             const aiFeedback = JSON.parse(response.choices[0].message.content);
-            
+
             // Merge AI qualitative feedback with deterministic scores
             analysis.missing_critical_keywords = [...new Set([...analysis.missing_critical_keywords, ...(aiFeedback.missing_critical_keywords || [])])].filter(k => k !== "N/A");
             analysis.critical_errors = [...analysis.critical_errors, ...(aiFeedback.critical_errors || [])];
             analysis.formatting_warnings = [...analysis.formatting_warnings, ...(aiFeedback.formatting_warnings || [])];
-            
+
             // Override the generic actionable feedback with AI's personalized feedback
             if (aiFeedback.actionable_feedback && aiFeedback.actionable_feedback.length > 0) {
                 analysis.actionable_feedback = aiFeedback.actionable_feedback;
             }
 
-            // Dynamic ATS Scoring Adjustments based on combined AI and heuristic findings
-            const keywordPenalty = analysis.missing_critical_keywords.length * 4; 
-            const errorPenalty = analysis.critical_errors.length * 8;
-            const warningPenalty = analysis.formatting_warnings.length * 2;
+            // Dynamic ATS Scoring Adjustments based on combined AI and heuristic findings (with balanced caps for AI influence)
+            const keywordPenalty = Math.min(20, analysis.missing_critical_keywords.length * 2.5); 
+            const errorPenalty = Math.min(20, analysis.critical_errors.length * 4);
+            const warningPenalty = Math.min(15, analysis.formatting_warnings.length * 2);
             
-            analysis.ats_compatibility_score = Math.max(0, analysis.ats_compatibility_score - keywordPenalty - errorPenalty - warningPenalty);
-            
+            analysis.ats_compatibility_score = Math.max(0, Math.round(analysis.ats_compatibility_score - keywordPenalty - errorPenalty - warningPenalty));
+
             // Recalculate overall score
             analysis.overall_score = Math.round((analysis.ats_compatibility_score + analysis.impact_score + analysis.action_verbs_score) / 3);
 
@@ -208,7 +208,7 @@ router.post('/upload', requireAuth, aiLimiter, upload.single('resume'), async (r
         progressEmitter.sendProgress(req.user.id, 'storage_sync', 'Syncing PDF document with secure cloud storage...');
         const fileExt = req.file.originalname.split('.').pop();
         const fileName = `${req.user.id}_${Date.now()}.${fileExt}`;
-        
+
         let publicUrl = 'local';
         const { data: storageData, error: storageError } = await supabase.storage
             .from('resumes')
@@ -244,7 +244,7 @@ router.post('/upload', requireAuth, aiLimiter, upload.single('resume'), async (r
         }
 
         progressEmitter.sendProgress(req.user.id, 'complete', 'Resume analyzed successfully!');
-        
+
         res.json({
             message: 'Resume analyzed successfully',
             fileName: req.file.originalname,

@@ -225,9 +225,14 @@ export default function Dashboard() {
                             <p className="text-content-muted font-medium mb-8 max-w-md leading-relaxed text-sm">
                                 Your neural training is calculating at peak efficiency. You are fully on track to dominate the upcoming technical evaluations.
                             </p>
-                            <button onClick={() => setActiveTab('Training Hub')} className="btn-primary shadow-lg shadow-brand-glow hover:-translate-y-1 w-full sm:w-auto">
-                                Launch Training Sequence <ArrowRight className="w-4 h-4 ml-1" />
-                            </button>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <button onClick={() => setActiveTab('Training Hub')} className="btn-primary shadow-lg shadow-brand-glow hover:-translate-y-1 w-full sm:w-auto">
+                                    Launch Training Sequence <ArrowRight className="w-4 h-4 ml-1" />
+                                </button>
+                                <button onClick={() => window.print()} className="px-6 py-3 rounded-xl border border-stroke text-content-base font-bold hover:bg-surface-hover hover:-translate-y-1 transition-all flex items-center justify-center gap-2 w-full sm:w-auto bg-surface-base">
+                                    <Download className="w-4 h-4" /> Export Report
+                                </button>
+                            </div>
                         </div>
                         <div className="relative w-40 h-40 shrink-0 z-10 flex items-center justify-center">
                             <div className="absolute inset-0 rounded-full border-[10px] border-surface-hover" />
@@ -610,7 +615,7 @@ export default function Dashboard() {
     };
 
     return (
-        <div className="flex h-screen overflow-hidden bg-surface-base text-content-base font-sans transition-colors duration-300">
+        <div className="flex h-screen overflow-hidden print:h-auto print:overflow-visible bg-surface-base text-content-base font-sans transition-colors duration-300">
             {/* Desktop Sidebar (Push Rail) */}
             <aside className="group/sidebar w-[80px] hover:w-72 transition-all duration-300 ease-in-out border-r border-stroke bg-surface-card hidden lg:flex flex-col z-20 shrink-0 shadow-sm relative overflow-hidden">
                 <div className="h-[76px] flex items-center px-5 border-b border-stroke gap-4 shrink-0 bg-surface-card sticky top-0">
@@ -669,7 +674,7 @@ export default function Dashboard() {
             </aside>
 
             {/* Main Viewport */}
-            <div className="w-full lg:w-[calc(100vw-80px)] shrink-0 flex flex-col min-w-0 overflow-hidden relative bg-surface-base transform-gpu">
+            <div className="w-full lg:w-[calc(100vw-80px)] shrink-0 flex flex-col min-w-0 overflow-hidden print:overflow-visible relative bg-surface-base transform-gpu">
                 {/* Top Header */}
                 <header className="h-[76px] border-b border-stroke bg-surface-card/90 backdrop-blur-xl flex items-center justify-between px-4 lg:px-8 z-30 shrink-0 sticky top-0">
                     <div className="flex items-center gap-4">
@@ -692,7 +697,7 @@ export default function Dashboard() {
                                 localStorage.setItem('theme', newTheme);
                                 setTheme(newTheme);
                             }}
-                            className="p-2.5 rounded-xl border border-stroke text-content-muted bg-surface-base hover:bg-surface-hover transition-colors shadow-sm cursor-pointer"
+                            className="p-2.5 rounded-xl border border-stroke text-content-muted bg-surface-base hover:bg-surface-hover transition-colors shadow-sm cursor-pointer hidden sm:block"
                             aria-label="Toggle Theme"
                         >
                             {theme === 'dark' ? <Sun className="w-5 h-5 block" /> : <Moon className="w-5 h-5 block" />}
@@ -727,7 +732,7 @@ export default function Dashboard() {
                 </header>
 
                 {/* Dashboard Scrollable Area */}
-                <main className="flex-1 overflow-y-auto w-full p-4 sm:p-6 lg:p-8 relative">
+                <main className="flex-1 overflow-y-auto print:overflow-visible w-full p-4 sm:p-6 lg:p-8 relative">
                     {loadingStats && (
                         <div className="absolute top-0 left-0 right-0 h-0.5 bg-brand-glow overflow-hidden z-50">
                             <motion.div 

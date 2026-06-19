@@ -550,6 +550,7 @@ export default function InterviewSession() {
     const [isLoading, setIsLoading] = useState(false);
     const [isEnding, setIsEnding] = useState(false);
     const [error, setError] = useState(null);
+    const [creditsExhausted, setCreditsExhausted] = useState(false);
 
     const handleStart = useCallback(async ({ position, field, difficulty, mode, company, jobDescription, resumeText }) => {
         setIsLoading(true);
@@ -566,6 +567,14 @@ export default function InterviewSession() {
                 },
                 body: JSON.stringify({ position, field, difficulty, mode, company, jobDescription, resumeText })
             });
+
+            if (res.status === 402) {
+                const errData = await res.json();
+                if (errData.error === 'VIDEO_CREDITS_EXHAUSTED') {
+                    setCreditsExhausted(true);
+                    return;
+                }
+            }
 
             if (!res.ok) {
                 const errData = await res.json();
@@ -630,6 +639,56 @@ export default function InterviewSession() {
             }
         }
     }, [session, navigate]);
+
+    if (creditsExhausted) {
+        return (
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="min-h-screen bg-surface-base flex items-center justify-center p-6 relative overflow-hidden"
+            >
+                <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand-glow blur-[120px] rounded-full" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-amber-500/5 blur-[120px] rounded-full" />
+
+                <div className="w-full max-w-lg relative z-10 text-center">
+                    <div className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                        <Video className="w-10 h-10 text-amber-400" />
+                    </div>
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-black uppercase tracking-[0.2em] mb-6">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        Video Service Temporarily Unavailable
+                    </div>
+                    <h1 className="text-3xl font-black text-content-base tracking-tight mb-4">
+                        AI Video Credits <span className="text-amber-400">Refreshing</span>
+                    </h1>
+                    <p className="text-content-muted font-medium leading-relaxed mb-10">
+                        Our AI video interview credits are being renewed. You can still practice everything else — 
+                        STAR stories, elevator pitch, and speaking drills are all available right now.
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button
+                            onClick={() => navigate('/dashboard')}
+                            className="py-4 rounded-xl border border-stroke text-content-base font-bold hover:bg-surface-hover transition-colors"
+                        >
+                            Back to Dashboard
+                        </button>
+                        <button
+                            onClick={() => { navigate('/dashboard'); }}
+                            className="btn-primary py-4 shadow-lg shadow-brand-glow"
+                        >
+                            <Zap className="w-4 h-4" />
+                            Go to Training Hub
+                        </button>
+                    </div>
+
+                    <p className="text-content-muted text-xs font-medium mt-8">
+                        Video interviews will be back shortly. All other features work normally.
+                    </p>
+                </div>
+            </motion.div>
+        );
+    }
 
     return (
         <AnimatePresence mode="wait">

@@ -1,4 +1,4 @@
-# CareerCraft AI - Backend
+# CareerCraft AI  -  Backend
 
 Secure Express backend for the CareerCraft AI platform.
 
