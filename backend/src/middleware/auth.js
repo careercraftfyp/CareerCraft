@@ -2,12 +2,17 @@ import { supabase } from '../lib/supabase.js';
 
 export const requireAuth = async (req, res, next) => {
     try {
+        let token = null;
         const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ error: 'Missing or malformed Authorization header' });
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.split(' ')[1];
+        } else if (req.query && req.query.token) {
+            token = req.query.token;
         }
 
-        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Missing or malformed Authorization header or token query parameter' });
+        }
         
         // Securely verify token with Supabase
         const { data: { user }, error } = await supabase.auth.getUser(token);

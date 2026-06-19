@@ -46,7 +46,7 @@ export async function getDashboardStats(token) {
 
     const allAtsScores = [
         ...atsReports.map(a => a.match_score).filter(s => s != null),
-        ...resumes.map(r => parseResumeAnalysis(r.parsed_text)).filter(Boolean).map(a => a.ats_compatibility_score || a.overall_score).filter(s => s != null)
+        ...resumes.map(r => parseResumeAnalysis(r.parsed_text)).filter(Boolean).map(a => a.overall_score ?? a.ats_compatibility_score).filter(s => s != null)
     ];
 
     const avgAtsScore = allAtsScores.length 
@@ -123,7 +123,7 @@ export async function getUsersList(token) {
         let atsCount = 0;
         uResumes.forEach(r => {
             const report = parseResumeAnalysis(r.parsed_text);
-            let score = report ? (report.ats_compatibility_score || report.overall_score) : null;
+            let score = report ? (report.overall_score ?? report.ats_compatibility_score) : null;
             if (score == null) {
                 const legacy = atsReports.find(a => a.resume_id === r.id);
                 score = legacy?.match_score;
@@ -159,7 +159,7 @@ export async function getUsersList(token) {
             fullResumes: uResumes.map(r => {
                 const rep = parseResumeAnalysis(r.parsed_text);
                 const leg = atsReports.find(a => a.resume_id === r.id);
-                const score = rep ? (rep.ats_compatibility_score || rep.overall_score) : leg?.match_score;
+                const score = rep ? (rep.overall_score ?? rep.ats_compatibility_score) : leg?.match_score;
                 return { ...r, score: score || 0 };
             }),
             fullInterviews: uInterviews.map(i => {
@@ -184,7 +184,7 @@ export async function getResumesList(token) {
         const legacyReport = atsReports.find(a => a.resume_id === r.id);
         const report = parseResumeAnalysis(r.parsed_text);
         
-        let matchScore = report?.ats_compatibility_score || report?.overall_score || legacyReport?.match_score || 0;
+        let matchScore = report?.overall_score ?? report?.ats_compatibility_score ?? legacyReport?.match_score ?? 0;
         let missingKeywords = report?.missing_critical_keywords || legacyReport?.missing_keywords || [];
         let keywordsMissingCount = Array.isArray(missingKeywords) ? missingKeywords.length : 0;
         
@@ -198,7 +198,8 @@ export async function getResumesList(token) {
             user_email: u?.email || '',
             ats_score: matchScore,
             keywords_missing_count: keywordsMissingCount,
-            full_report: fullReport
+            full_report: fullReport,
+            file_url: r.storage_path && r.storage_path !== 'local' ? r.storage_path : null
         };
     });
 }
@@ -237,7 +238,7 @@ export async function getAnalyticsData(token) {
     const atsData = resumes.map(r => parseResumeAnalysis(r.parsed_text)).filter(Boolean);
     const allAts = [
         ...atsReports.map(a => ({ match_score: a.match_score, missing_keywords: a.missing_keywords })),
-        ...atsData.map(a => ({ match_score: a.ats_compatibility_score || a.overall_score, missing_keywords: a.missing_critical_keywords }))
+        ...atsData.map(a => ({ match_score: a.overall_score ?? a.ats_compatibility_score, missing_keywords: a.missing_critical_keywords }))
     ];
 
     const avgAts = allAts.length ? Math.round(allAts.reduce((a, c) => a + (c.match_score || 0), 0) / allAts.length) : 0;

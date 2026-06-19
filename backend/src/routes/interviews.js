@@ -1,7 +1,9 @@
 import express from 'express';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
+import https from 'https';
 import { supabase } from '../lib/supabase.js';
+import { aiLimiter } from '../middleware/rateLimiter.js';
 
 dotenv.config();
 
@@ -10,9 +12,61 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const TAVUS_API_BASE = 'https://tavusapi.com/v2';
 
+function tavusRequest(path, method, payload = null) {
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'tavusapi.com',
+            port: 443,
+            path: `/v2${path}`,
+            method: method,
+            headers: {
+                'x-api-key': process.env.TAVUS_API_KEY,
+                'Content-Type': 'application/json'
+            }
+        };
+
+        let bodyData = '';
+        if (payload) {
+            bodyData = JSON.stringify(payload);
+            options.headers['Content-Length'] = Buffer.byteLength(bodyData);
+        }
+
+        const req = https.request(options, (res) => {
+            let responseData = '';
+            res.on('data', (chunk) => {
+                responseData += chunk;
+            });
+            res.on('end', () => {
+                resolve({
+                    ok: res.statusCode >= 200 && res.statusCode < 300,
+                    status: res.statusCode,
+                    text: async () => responseData,
+                    json: async () => JSON.parse(responseData)
+                });
+            });
+        });
+
+        req.on('error', (err) => {
+            reject(err);
+        });
+
+        if (payload) {
+            req.write(bodyData);
+        }
+        req.end();
+    });
+}
+
 // Default persona: "excited" interview persona
 const DEFAULT_PERSONA_ID = 'pdac61133ac5';
 const DEFAULT_REPLICA_ID = 'r5f0577fc829';
+
+// Difficulty-based avatars (Replica IDs)
+const DIFFICULTY_REPLICAS = {
+    easy: 'r291e545fd67',    // Gabby - Home
+    medium: 'r5f0577fc829',  // Lucas - Studio (Default)
+    hard: 'rfb0463909e3'     // James - Office
+};
 
 import { requireAuth } from '../middleware/auth.js';
 
@@ -20,7 +74,7 @@ import { requireAuth } from '../middleware/auth.js';
  * Route: Initialize Interview Session
  * POST /api/interviews/initialize
  */
-router.post('/initialize', requireAuth, async (req, res) => {
+router.post('/initialize', requireAuth, aiLimiter, async (req, res) => {
     try {
         const { position, field = '', difficulty = 'medium', mode = 'voice + video', company = '', jobDescription = '', resumeText = '' } = req.body;
 
@@ -124,9 +178,11 @@ router.post('/initialize', requireAuth, async (req, res) => {
 
         Begin the interview now. Open with a single, welcoming but businesslike sentence, then ask them to walk you through their background briefly.`;
 
+        const selectedReplicaId = DIFFICULTY_REPLICAS[difficulty.toLowerCase()] || DEFAULT_REPLICA_ID;
+
         const tavusPayload = {
             persona_id: DEFAULT_PERSONA_ID,
-            replica_id: DEFAULT_REPLICA_ID,
+            replica_id: selectedReplicaId,
             conversation_name: `Mock Interview - ${position}`,
             conversational_context: interviewContext,
             custom_greeting: `Good to meet you. We have a focused session today for the ${position} role — let's make good use of the time. Please walk me through your background and what brought you to this opportunity.`,
@@ -139,14 +195,7 @@ router.post('/initialize', requireAuth, async (req, res) => {
             }
         };
 
-        const tavusRes = await fetch(`${TAVUS_API_BASE}/conversations`, {
-            method: 'POST',
-            headers: {
-                'x-api-key': process.env.TAVUS_API_KEY,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(tavusPayload)
-        });
+        const tavusRes = await tavusRequest('/conversations', 'POST', tavusPayload);
 
         if (!tavusRes.ok) {
             const errText = await tavusRes.text();
@@ -187,13 +236,7 @@ router.post('/:conversationId/end', requireAuth, async (req, res) => {
     try {
         const { conversationId } = req.params;
 
-        const tavusRes = await fetch(`${TAVUS_API_BASE}/conversations/${conversationId}/end`, {
-            method: 'POST',
-            headers: {
-                'x-api-key': process.env.TAVUS_API_KEY,
-                'Content-Type': 'application/json'
-            }
-        });
+        const tavusRes = await tavusRequest(`/conversations/${conversationId}/end`, 'POST');
 
         if (!tavusRes.ok) {
             const errText = await tavusRes.text();
@@ -226,7 +269,7 @@ const __dirname = path.dirname(__filename);
 
 const upload = multer({ dest: os.tmpdir() });
 
-router.post('/:sessionId/evaluate', requireAuth, upload.single('audio'), async (req, res) => {
+router.post('/:sessionId/evaluate', requireAuth, aiLimiter, upload.single('audio'), async (req, res) => {
     try {
         const { sessionId } = req.params;
         const file = req.file;
@@ -274,17 +317,17 @@ router.post('/:sessionId/evaluate', requireAuth, upload.single('audio'), async (
 
         // 2. Transcribe Audio and Analyze Acoustics Concurrently
         const audioStream = fs.createReadStream(audioPath);
-        
+
         const pythonScriptPath = path.join(__dirname, '../utils/audio_analyzer.py');
         const acousticAnalysisPromise = new Promise((resolve) => {
             // Use 'python3' or 'python' based on environment, usually 'python' works on windows/venv
             const pythonProcess = spawn('python', [pythonScriptPath, audioPath]);
             let dataString = '';
-            
+
             pythonProcess.stdout.on('data', (data) => {
                 dataString += data.toString();
             });
-            
+
             pythonProcess.on('close', (code) => {
                 try {
                     const result = JSON.parse(dataString);
@@ -294,7 +337,7 @@ router.post('/:sessionId/evaluate', requireAuth, upload.single('audio'), async (
                     resolve({ status: 'error', error_message: 'Failed to parse output' });
                 }
             });
-            
+
             pythonProcess.on('error', (err) => {
                 console.error('Failed to start python script:', err);
                 resolve({ status: 'error', error_message: 'Python script failed to start' });
@@ -400,7 +443,7 @@ Provide a comprehensive, objective performance report. Your response MUST be a v
 
     } catch (error) {
         console.error('Error evaluating interview:', error);
-        
+
         // Failsafe: Update DB status to failed so frontend stops polling infinitely
         try {
             await supabase.from('interviews').update({ status: 'failed' }).eq('id', req.params.sessionId);

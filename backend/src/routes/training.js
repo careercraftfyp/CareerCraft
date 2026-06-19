@@ -7,6 +7,7 @@ import FormData from 'form-data';
 import dotenv from 'dotenv';
 import { supabase } from '../lib/supabase.js';
 import { requireAuth } from '../middleware/auth.js';
+import { aiLimiter } from '../middleware/rateLimiter.js';
 
 dotenv.config();
 
@@ -64,7 +65,7 @@ Example format: ["Question 1", "Question 2", "Question 3", "Question 4", "Questi
  * POST /api/training/star
  * Polishes a STAR answer via GPT and saves it to star_stories.
  */
-router.post('/star', requireAuth, async (req, res) => {
+router.post('/star', requireAuth, aiLimiter, async (req, res) => {
     try {
         const { domain, question, situation, task, action, result } = req.body;
         if (!domain || !question || !situation || !task || !action || !result) {
@@ -205,7 +206,7 @@ router.delete('/star/stories/:id', requireAuth, async (req, res) => {
  * POST /api/training/pitch
  * Evaluates a pitch via GPT and saves the attempt.
  */
-router.post('/pitch', requireAuth, async (req, res) => {
+router.post('/pitch', requireAuth, aiLimiter, async (req, res) => {
     try {
         const { pitchText, domain } = req.body;
         if (!pitchText || !domain) {
@@ -316,7 +317,7 @@ router.get('/pitch/history', requireAuth, async (req, res) => {
  * Transcribes audio using Whisper (reused from interview pipeline).
  */
 const upload = multer({ dest: os.tmpdir() });
-router.post('/transcribe', requireAuth, upload.single('audio'), async (req, res) => {
+router.post('/transcribe', requireAuth, aiLimiter, upload.single('audio'), async (req, res) => {
     try {
         const file = req.file;
         if (!file) return res.status(400).json({ error: 'No audio file provided.' });
@@ -409,7 +410,7 @@ router.get('/drills', requireAuth, async (req, res) => {
  * POST /api/training/speaking-feedback
  * Evaluates a spoken answer transcript and returns AI coaching suggestions.
  */
-router.post('/speaking-feedback', requireAuth, async (req, res) => {
+router.post('/speaking-feedback', requireAuth, aiLimiter, async (req, res) => {
     try {
         const { transcript, prompt, domain } = req.body;
         if (!transcript || !prompt) {

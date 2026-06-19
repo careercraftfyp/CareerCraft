@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, CheckCircle, CheckCircle2, Cpu, Mail, MapPin, MessageSquare, Phone, Rocket, Send, Shield, Target, X } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 export default function Contact() {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,7 +27,7 @@ export default function Contact() {
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:5000/api/contact', {
+            const response = await fetch(`${API_URL}/contact`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

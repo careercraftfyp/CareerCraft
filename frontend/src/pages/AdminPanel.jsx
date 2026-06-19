@@ -6,7 +6,7 @@ import {
 import {
     LayoutDashboard, Users, FileText, Video, TrendingUp, Settings,
     LogOut, Search, Eye, AlertCircle, Loader2, ArrowUpRight, ArrowDownRight,
-    CheckCircle2, XCircle
+    CheckCircle2, XCircle, Download
 } from 'lucide-react';
 import Logo from '../components/Logo';
 import * as Queries from './adminQueries';
@@ -313,7 +313,16 @@ const ResumesView = ({ token }) => {
                                         </td>
                                         <td className="p-4 text-sm text-content-muted">{r.keywords_missing_count}</td>
                                         <td className="p-4 text-right">
-                                            <button onClick={() => setSelectedResume(r)} className="p-2 hover:bg-brand/10 text-brand rounded-lg transition-colors inline-flex"><Eye className="w-4 h-4" /></button>
+                                            <div className="flex justify-end gap-1">
+                                                {r.file_url && (
+                                                    <a href={r.file_url} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-emerald-500/10 text-emerald-400 rounded-lg transition-colors inline-flex" title="View PDF">
+                                                        <Download className="w-4 h-4" />
+                                                    </a>
+                                                )}
+                                                <button onClick={() => setSelectedResume(r)} className="p-2 hover:bg-brand/10 text-brand rounded-lg transition-colors inline-flex" title="View Details">
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -332,9 +341,16 @@ const ResumesView = ({ token }) => {
                                 <p className="font-bold text-content-base">{selectedResume.file_name}</p>
                                 <p className="text-sm text-content-muted">User: {selectedResume.user_name}</p>
                             </div>
-                            <div className="text-right">
-                                <p className="text-3xl font-black text-brand">{selectedResume.ats_score}%</p>
-                                <p className="text-xs text-content-muted uppercase">Match Score</p>
+                            <div className="flex flex-col items-end gap-2 text-right">
+                                <div>
+                                    <p className="text-3xl font-black text-brand leading-none">{selectedResume.ats_score}%</p>
+                                    <p className="text-xs text-content-muted uppercase mt-1">Match Score</p>
+                                </div>
+                                {selectedResume.file_url && (
+                                    <a href={selectedResume.file_url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-brand/10 hover:bg-brand/20 text-brand text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-2 border border-brand/20">
+                                        <FileText className="w-3.5 h-3.5" /> View PDF
+                                    </a>
+                                )}
                             </div>
                         </div>
                         {selectedResume.full_report ? (

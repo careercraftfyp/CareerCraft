@@ -11,6 +11,8 @@ export default function ResumeUpload({ embedded = false }) {
     const navigate = useNavigate();
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
+    const [progressMessage, setProgressMessage] = useState('');
+    const [progressStep, setProgressStep] = useState('');
     const [error, setError] = useState(null);
     const [result, setResult] = useState(null);
     const fileInputRef = useRef(null);
@@ -37,13 +39,36 @@ export default function ResumeUpload({ embedded = false }) {
 
         setUploading(true);
         setError(null);
+        setProgressMessage('Initializing secure parser connection...');
+        setProgressStep('init');
 
         const formData = new FormData();
         formData.append('resume', file);
 
+        let eventSource = null;
+
         try {
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
+
+            // Establish real-time EventSource connection
+            eventSource = new EventSource(`${API_URL}/resumes/progress?token=${token}`);
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.message) {
+                        setProgressMessage(data.message);
+                    }
+                    if (data.step) {
+                        setProgressStep(data.step);
+                    }
+                    if (data.step === 'complete') {
+                        eventSource.close();
+                    }
+                } catch (err) {
+                    console.error('Error parsing progress stream:', err);
+                }
+            };
 
             const response = await fetch(`${API_URL}/resumes/upload`, {
                 method: 'POST',
@@ -63,7 +88,12 @@ export default function ResumeUpload({ embedded = false }) {
         } catch (err) {
             setError(err.message);
         } finally {
+            if (eventSource) {
+                eventSource.close();
+            }
             setUploading(false);
+            setProgressMessage('');
+            setProgressStep('');
         }
     };
 
@@ -125,9 +155,10 @@ export default function ResumeUpload({ embedded = false }) {
                             className="space-y-6"
                         >
                             <div
-                                onClick={() => fileInputRef.current?.click()}
-                                className={`group relative overflow-hidden card-bento border-2 border-dashed p-16 flex flex-col items-center justify-center text-center transition-all cursor-pointer
-                                    ${file ? 'border-brand/20 bg-brand/5' : 'border-white/10 hover:border-brand/20'}`}
+                                onClick={() => !uploading && fileInputRef.current?.click()}
+                                className={`group relative overflow-hidden card-bento border-2 border-dashed p-16 flex flex-col items-center justify-center text-center transition-all
+                                    ${file ? 'border-brand/20 bg-brand/5' : 'border-white/10 hover:border-brand/20'}
+                                    ${uploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                             >
                                 <input
                                     type="file"
@@ -135,6 +166,7 @@ export default function ResumeUpload({ embedded = false }) {
                                     onChange={handleFileChange}
                                     className="hidden"
                                     accept=".pdf"
+                                    disabled={uploading}
                                 />
 
                                 <div className={`w-24 h-24 rounded-[32px] flex items-center justify-center mb-8 transition-all duration-500 shadow-2xl
@@ -146,7 +178,7 @@ export default function ResumeUpload({ embedded = false }) {
                                     <div className="space-y-2">
                                         <h3 className="text-2xl font-black text-content-base italic uppercase tracking-tight">{file.name}</h3>
                                         <div className="inline-block px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-content-muted font-black uppercase tracking-widest">
-                                            {(file.size / (1024 * 1024)).toFixed(2)} MB Payload
+                                            {(file.size / (1024 * 1024)).toFixed(2)} MB File Size
                                         </div>
                                     </div>
                                 ) : (
@@ -181,10 +213,15 @@ export default function ResumeUpload({ embedded = false }) {
                             >
                                 <div className="relative z-10 flex items-center justify-center gap-4">
                                     {uploading ? (
-                                        <>
-                                            <Loader2 className="w-6 h-6 animate-spin" />
-                                            Interrogating Payload...
-                                        </>
+                                        <div className="flex flex-col items-center justify-center py-2 gap-2 text-center">
+                                            <div className="flex items-center gap-3">
+                                                <Loader2 className="w-5 h-5 animate-spin text-brand" />
+                                                <span className="font-extrabold uppercase tracking-widest text-xs">Processing Pipeline Active</span>
+                                            </div>
+                                            <div className="text-[11px] text-content-muted lowercase first-letter:uppercase font-medium italic">
+                                                {progressMessage || 'Analyzing document...'}
+                                            </div>
+                                        </div>
                                     ) : (
                                         <>
                                             Execute Analysis

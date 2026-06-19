@@ -19,10 +19,15 @@ CareerCraft AI is a high-performance, neural-themed career preparation ecosystem
 *   **Sentiment Analysis:** Evaluates not just what you say, but your confidence and delivery.
 *   **Instant Evaluation:** Generates a comprehensive skill-dimension scorecard post-session.
 
-### 📊 Neural Dashboard
+### 📊 Neural Dashboard & Admin Panel
 *   **Progression Tracking:** Visualize your ATS score trends and interview mastery over time.
 *   **Bento-Grid Architecture:** A premium, high-density UI designed for rapid data consumption.
-*   **Neural Pulse Loading:** Custom high-speed loading states for a seamless data-sync experience.
+*   **Centralized Command:** A secure Admin Portal to manage platform analytics and user telemetry.
+
+### 🧠 AI Training Hub
+*   **Elevator Pitch Trainer:** Evaluate and refine your 60-second professional pitch.
+*   **STAR Story Builder:** Craft and polish behavioral interview answers using the STAR method.
+*   **Real-Time Speaking Drills:** Detect filler words and improve clarity with AI-guided exercises.
 
 ### 📧 Corporate Contact Protocol
 *   **Integrated Communication:** Fully functional contact system with database logging.
@@ -41,7 +46,8 @@ CareerCraft AI is a high-performance, neural-themed career preparation ecosystem
 ### **Neural Backend**
 - **Runtime:** Node.js + Express v5
 - **Persistence:** Supabase (PostgreSQL with RLS)
-- **Intelligence:** OpenAI GPT-4o API
+- **Intelligence:** OpenAI GPT-4o API & Whisper-1
+- **Video AI:** Tavus API Integration
 - **Communications:** Resend API Integration
 - **Processing:** Multer, PDF-Parse, Mammoth
 
@@ -66,6 +72,7 @@ SUPABASE_URL=your_url
 SUPABASE_ANON_KEY=your_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_key # For admin tasks
 OPENAI_API_KEY=your_openai_key
+TAVUS_API_KEY=your_tavus_key
 RESEND_API_KEY=your_resend_key
 ADMIN_EMAIL=your_official_email
 ```

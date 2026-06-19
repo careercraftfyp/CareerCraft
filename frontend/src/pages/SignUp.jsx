@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight, AlertCircle, Loader2, Sparkles, Rocket, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, AlertCircle, Loader2, Sparkles, Rocket, CheckCircle2, Eye } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -11,6 +11,7 @@ export default function SignUp() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const { signUp, signInWithGoogle, user } = useAuth();
     const navigate = useNavigate();
@@ -32,6 +33,13 @@ export default function SignUp() {
         try {
             const { data, error } = await signUp(email, password, fullName);
             if (error) throw error;
+
+            // Supabase returns an empty identities array if the user already exists 
+            // when email enumeration protection is enabled
+            if (data?.user?.identities != null && data.user.identities.length === 0) {
+                setError('Email is already in use');
+                return;
+            }
 
             // If Supabase returns a session immediately, email confirmation is OFF.
             // We don't need to show the "Check Email" screen, they will be auto-redirected.
@@ -147,14 +155,22 @@ export default function SignUp() {
                                         <div className="relative group">
                                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-content-muted group-focus-within:text-brand transition-colors" />
                                             <input
-                                                type="password"
+                                                type={showPassword ? "text" : "password"}
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
                                                 placeholder="••••••••"
-                                                className="input-field input-with-icon pl-12"
+                                                className="input-field input-with-icon pl-12 pr-12"
                                                 required
                                                 minLength={6}
                                             />
+                                            <button
+                                                type="button"
+                                                onMouseEnter={() => setShowPassword(true)}
+                                                onMouseLeave={() => setShowPassword(false)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-content-muted hover:text-brand transition-colors cursor-pointer"
+                                            >
+                                                <Eye className="w-5 h-5" />
+                                            </button>
                                         </div>
                                     </div>
 

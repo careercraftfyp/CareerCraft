@@ -181,3 +181,19 @@ CREATE POLICY "Enable public insert" ON public.contact_messages
 -- Allow authenticated users (admins) to view messages
 CREATE POLICY "Enable read for authenticated users" ON public.contact_messages
     FOR SELECT USING (auth.role() = 'authenticated');
+
+-----------------------------------------------------
+-- Performance Indexing
+-----------------------------------------------------
+-- Foreign key indices for faster join and filtering queries
+CREATE INDEX IF NOT EXISTS idx_resumes_user_id ON public.resumes(user_id);
+CREATE INDEX IF NOT EXISTS idx_ats_reports_user_id ON public.ats_reports(user_id);
+CREATE INDEX IF NOT EXISTS idx_interviews_user_id ON public.interviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_star_stories_user_id ON public.star_stories(user_id);
+CREATE INDEX IF NOT EXISTS idx_pitch_attempts_user_id ON public.pitch_attempts(user_id);
+CREATE INDEX IF NOT EXISTS idx_practice_sessions_user_id ON public.practice_sessions(user_id);
+
+-- Date ordering indices to speed up "latest-first" sorting
+CREATE INDEX IF NOT EXISTS idx_resumes_created_at ON public.resumes(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_interviews_created_at ON public.interviews(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_practice_sessions_created_at ON public.practice_sessions(created_at DESC);

@@ -482,7 +482,7 @@ export default function Dashboard() {
                         </div>
                         <div className="flex flex-col leading-none truncate opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 whitespace-nowrap">
                             <span className="text-lg font-black text-content-base uppercase italic tracking-tighter">CareerCraft</span>
-                            <span className="text-[10px] font-black tracking-widest text-brand mt-0.5">CAREER INTELLIGENCE</span>
+                            <span className="text-[10px] font-black tracking-widest text-brand mt-0.5">INTELLIGENCE</span>
                         </div>
                     </Link>
                 </div>
