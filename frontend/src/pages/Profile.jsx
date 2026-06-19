@@ -2,14 +2,16 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Settings, Activity, Calendar, FileText, Video, Bell, Target, Award, Key, Edit2, Save, X, Check } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function Profile({ embedded = false }) {
-    const { user, supabase } = useAuth();
+    const { user } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
+    const [stats, setStats] = useState({ totalResumes: 0, totalInterviews: 0, lastInterviewDate: null });
 
     const initialName = user?.user_metadata?.full_name || '';
     const [formData, setFormData] = useState({
@@ -33,12 +35,54 @@ export default function Profile({ embedded = false }) {
     const userInitial = `${firstInitial}${lastInitial}` || 'U';
 
     let memberSince = 'Today';
+    let accountAgeDays = 0;
+    let lastActiveStr = 'Today';
+
     if (user?.created_at) {
         const date = new Date(user.created_at);
         if (!isNaN(date.getTime())) {
             memberSince = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const diffTime = new Date().getTime() - date.getTime();
+            accountAgeDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            if (accountAgeDays < 0) accountAgeDays = 0;
         }
     }
+
+    let lastInterviewStr = 'None';
+    if (stats.lastInterviewDate) {
+        const interviewDate = new Date(stats.lastInterviewDate);
+        if (!isNaN(interviewDate.getTime())) {
+            const diffTime = new Date().getTime() - interviewDate.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays === 0) lastInterviewStr = 'Today';
+            else if (diffDays === 1) lastInterviewStr = 'Yesterday';
+            else lastInterviewStr = `${diffDays} days ago`;
+        }
+    }
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) return;
+                const token = session.access_token;
+                const res = await fetch(`${API_URL}/dashboard/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setStats({
+                        totalResumes: data.totalResumes || 0,
+                        totalInterviews: data.totalInterviews || 0,
+                        lastInterviewDate: data.lastInterviewDate || null,
+                    });
+                }
+            } catch (error) {
+                // Ignore API errors gracefully
+            }
+        };
+        fetchStats();
+    }, [supabase]);
 
     const handleSave = async () => {
         try {
@@ -225,19 +269,19 @@ export default function Profile({ embedded = false }) {
                         <div className="space-y-4">
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-dark-300 flex items-center gap-2"><FileText className="w-4 h-4 text-dark-500" /> Resumes Uploaded</span>
-                                <span className="text-white font-bold">0</span>
+                                <span className="text-white font-bold">{stats.totalResumes}</span>
                             </div>
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-dark-300 flex items-center gap-2"><Video className="w-4 h-4 text-dark-500" /> Interviews Completed</span>
-                                <span className="text-white font-bold">0</span>
+                                <span className="text-white font-bold">{stats.totalInterviews}</span>
                             </div>
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-dark-300 flex items-center gap-2"><Activity className="w-4 h-4 text-dark-500" /> Account Age</span>
-                                <span className="text-white font-bold">0 days</span>
+                                <span className="text-white font-bold">{accountAgeDays} days</span>
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-dark-300 flex items-center gap-2"><Target className="w-4 h-4 text-dark-500" /> Last Active</span>
-                                <span className="text-white font-bold">Today</span>
+                                <span className="text-dark-300 flex items-center gap-2"><Target className="w-4 h-4 text-dark-500" /> Last Interview</span>
+                                <span className="text-white font-bold">{lastInterviewStr}</span>
                             </div>
                         </div>
                     </div>

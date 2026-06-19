@@ -5,6 +5,7 @@ import {
     CheckCircle, AlertCircle, Loader2, ArrowLeft,
     BarChart3, MessageSquare, Target, Zap
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -19,7 +20,12 @@ export default function InterviewReport() {
 
         const fetchReport = async () => {
             try {
-                const res = await fetch(`${API_URL}/interviews/${sessionId}/report`);
+                const { data: { session } } = await supabase.auth.getSession();
+                const token = session?.access_token;
+
+                const res = await fetch(`${API_URL}/interviews/${sessionId}/report`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
 
                 if (res.status === 202) {
                     // Still processing

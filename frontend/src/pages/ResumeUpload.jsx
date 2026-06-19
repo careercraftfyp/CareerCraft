@@ -3,6 +3,7 @@ import { FileUp, FileText, CheckCircle2, AlertCircle, Loader2, ArrowRight, Refre
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import ResumeAnalysisResult from '../components/ResumeAnalysisResult';
+import { supabase } from '../lib/supabase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -41,8 +42,14 @@ export default function ResumeUpload({ embedded = false }) {
         formData.append('resume', file);
 
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
             const response = await fetch(`${API_URL}/resumes/upload`, {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 body: formData,
             });
 

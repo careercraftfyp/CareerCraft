@@ -3,18 +3,9 @@ import { supabase } from '../lib/supabase.js';
 
 const router = express.Router();
 
-// Dynamic Mock Auth: Fetches a valid user to satisfy foreign key constraints
-const mockAuth = async (req, res, next) => {
-    try {
-        const { data } = await supabase.from('users').select('id').limit(1);
-        req.user = { id: data?.[0]?.id || '00000000-0000-0000-0000-000000000000' };
-    } catch(e) {
-        req.user = { id: '00000000-0000-0000-0000-000000000000' };
-    }
-    next();
-};
+import { requireAuth } from '../middleware/auth.js';
 
-router.get('/stats', mockAuth, async (req, res) => {
+router.get('/stats', requireAuth, async (req, res) => {
     try {
         const userId = req.user.id;
 
@@ -101,12 +92,55 @@ router.get('/stats', mockAuth, async (req, res) => {
         const totalPractice = safePractice.length;
         const trainingProgress = totalPractice > 0 ? Math.round((completedPractice / totalPractice) * 100) : 0;
 
+        // Calculate Weekly Growth Metrics
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+        const calculateGrowth = (current_total, recently_added) => {
+            const previous_total = current_total - recently_added;
+            if (previous_total === 0) return recently_added > 0 ? 100 : 0;
+            return Math.round((recently_added / previous_total) * 100);
+        };
+
+        const resumesLastWeek = safeResumes.filter(r => new Date(r.created_at) >= oneWeekAgo).length;
+        const resumeGrowth = safeResumes.length === 0 ? 0 : calculateGrowth(safeResumes.length, resumesLastWeek);
+
+        const interviewsLastWeek = completedInterviews.filter(i => new Date(i.created_at) >= oneWeekAgo).length;
+        const interviewGrowth = completedInterviews.length === 0 ? 0 : calculateGrowth(completedInterviews.length, interviewsLastWeek);
+
+        let atsGrowth = 0;
+        if (safeResumes.length > 0) {
+            const olderResumes = safeResumes.filter(r => new Date(r.created_at) < oneWeekAgo);
+            if (olderResumes.length > 0) {
+                const oldTotalScore = olderResumes.reduce((acc, r) => acc + (r.analysis?.overall_score || 0), 0);
+                const oldAvg = oldTotalScore / olderResumes.length;
+                atsGrowth = Math.round(((avgAtsScore - oldAvg) / (oldAvg || 1)) * 100);
+            } else {
+                atsGrowth = 100;
+            }
+        }
+        
+        const trainingGrowth = trainingProgress > 0 ? Math.round(trainingProgress / 2) : 0; // estimate
+
+        const lastInterviewDate = completedInterviews.length > 0 
+            ? completedInterviews.reduce((latest, current) => {
+                return new Date(current.created_at) > new Date(latest.created_at) ? current : latest;
+              }).created_at
+            : null;
+
         res.json({
             totalResumes: resumeCount || 0,
             totalInterviews: completedInterviews.length,
             avgAtsScore: `${avgAtsScore}/100`,
             practiceTime: `${completedInterviews.length * 20 + completedPractice * 10}m`, // 20m per interview, 10m per practice
             trainingProgress: `${trainingProgress}%`,
+            lastInterviewDate: lastInterviewDate,
+            growth: {
+                resumes: resumesLastWeek,
+                interviews: interviewsLastWeek,
+                atsScore: atsGrowth,
+                trainingProgress: trainingGrowth
+            },
             atsTrend: atsTrend.length > 0 ? atsTrend : [
                 { name: 'Week 1', score: 0 },
                 { name: 'Week 2', score: 0 },

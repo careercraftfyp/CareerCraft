@@ -3,27 +3,7 @@ import { supabase } from '../lib/supabase.js';
 
 const router = express.Router();
 
-// Middleware to verify Supabase JWT
-// The frontend will send the active session JWT in the Authorization header
-const requireAuth = async (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-        return res.status(401).json({ error: 'Missing Authorization header' });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-
-    // Verify token with Supabase Auth
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-
-    if (error || !user) {
-        return res.status(401).json({ error: 'Unauthorized or invalid token' });
-    }
-
-    // Attach user to request object
-    req.user = user;
-    next();
-};
+import { requireAuth } from '../middleware/auth.js';
 
 // Example Protected Route: Get User Profile Data
 router.get('/profile', requireAuth, async (req, res) => {

@@ -7,6 +7,7 @@ import {
     ArrowLeft, FileText, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../lib/supabase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -37,8 +38,12 @@ function SetupScreen({ onStart, isLoading, error }) {
         formData.append('resume', file);
 
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            
             const res = await fetch(`${API_URL.replace('/api', '')}/api/resumes/upload`, {
                 method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
             });
             if (res.ok) {
@@ -549,9 +554,15 @@ export default function InterviewSession() {
         setIsLoading(true);
         setError(null);
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
             const res = await fetch(`${API_URL}/interviews/initialize`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ position, field, difficulty, mode, company, jobDescription, resumeText })
             });
 
@@ -576,8 +587,12 @@ export default function InterviewSession() {
         }
         setIsEnding(true);
         try {
+            const { data: { session: authSession } } = await supabase.auth.getSession();
+            const token = authSession?.access_token;
+
             await fetch(`${API_URL}/interviews/${session.conversationId}/end`, {
-                method: 'POST'
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (session.sessionId) {
@@ -591,6 +606,7 @@ export default function InterviewSession() {
 
                 await fetch(`${API_URL}/interviews/${session.sessionId}/evaluate`, {
                     method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
                 });
             }

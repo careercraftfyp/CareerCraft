@@ -10,6 +10,7 @@ import {
     BarChart, Bar, AreaChart, Area, Cell
 } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import ResumeUpload from './ResumeUpload';
 import Profile from './Profile';
 import ResumeAnalysisResult from '../components/ResumeAnalysisResult';
@@ -46,7 +47,12 @@ export default function Dashboard() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await fetch(`${API_URL}/dashboard/stats`);
+                const { data: { session } } = await supabase.auth.getSession();
+                const token = session?.access_token;
+
+                const res = await fetch(`${API_URL}/dashboard/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 if (!res.ok) throw new Error('Failed to fetch stats');
                 const data = await res.json();
                 setLiveStats(data);
@@ -60,11 +66,11 @@ export default function Dashboard() {
         if (activeTab === 'Overview') {
             fetchStats();
         }
-        
+
         if (activeTab === 'Resume Analyzer' && history.length === 0) {
             fetchHistory();
         }
-        
+
         // Also refetch history if we navigate to Overview and want to see history (optional, dashboard auto-updates)
     }, [activeTab]);
 
@@ -81,7 +87,12 @@ export default function Dashboard() {
 
     const fetchHistory = async () => {
         try {
-            const res = await fetch(`${API_URL}/resumes`);
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
+            const res = await fetch(`${API_URL}/resumes`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (!res.ok) throw new Error('Failed to fetch history');
             const data = await res.json();
             setHistory(data);
@@ -89,13 +100,6 @@ export default function Dashboard() {
             console.error('History fetch error:', err);
         }
     };
-
-    const stats = [
-        { label: 'Total Resumes', value: liveStats?.totalResumes ?? '0', icon: FileText, color: 'text-blue-400', clickable: true },
-        { label: 'Total Interviews', value: liveStats?.totalInterviews ?? '0', icon: Video, color: 'text-emerald-400' },
-        { label: 'Avg ATS Score', value: liveStats?.avgAtsScore ?? '0/100', icon: Target, color: 'text-yellow-400' },
-        { label: 'Training ROI', value: liveStats?.trainingProgress ?? '0%', icon: Zap, color: 'text-purple-400', clickable: true, tab: 'Training Hub' }
-    ];
 
     const renderHeader = () => (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -196,7 +200,15 @@ export default function Dashboard() {
         </div>
     );
 
-    const renderOverview = () => (
+    const renderOverview = () => {
+        const stats = [
+            { label: 'Total Resumes', value: liveStats?.totalResumes ?? '0', icon: FileText, color: 'text-blue-400', clickable: true, growth: liveStats?.growth?.resumes ?? 0 },
+            { label: 'Total Interviews', value: liveStats?.totalInterviews ?? '0', icon: Video, color: 'text-emerald-400', growth: liveStats?.growth?.interviews ?? 0 },
+            { label: 'Avg ATS Score', value: liveStats?.avgAtsScore ?? '0/100', icon: Target, color: 'text-amber-400', growth: liveStats?.growth?.atsScore ?? 0, growthSuffix: '%' },
+            { label: 'Training ROI', value: liveStats?.trainingProgress ?? '0%', icon: Zap, color: 'text-purple-400', clickable: true, tab: 'Training Hub', growth: liveStats?.growth?.trainingProgress ?? 0, growthSuffix: '%' }
+        ];
+
+        return (
         <div className="space-y-8">
             {viewMode === 'history' ? renderHistory() : (
                 <>
@@ -229,9 +241,9 @@ export default function Dashboard() {
                                         </div>
                                     </div>
                                     <h3 className="text-3xl font-bold text-white tracking-tight">{stat.value}</h3>
-                                    <div className="mt-2 text-[10px] text-emerald-400 flex items-center gap-1 font-bold">
-                                        <span>↑ 12%</span>
-                                        <span className="text-dark-500 font-medium tracking-normal">from last month</span>
+                                    <div className={`mt-2 text-[10px] flex items-center gap-1 font-bold ${stat.growth >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                        <span>{stat.growth >= 0 ? '↑' : '↓'} {Math.abs(stat.growth)}{stat.growthSuffix || ''}</span>
+                                        <span className="text-dark-500 font-medium tracking-normal">from last week</span>
                                     </div>
                                 </motion.div>
                             );
@@ -251,7 +263,7 @@ export default function Dashboard() {
                             {(!liveStats?.atsTrend || liveStats.atsTrend.length === 0) ? (
                                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6 m-4 ml-0 bg-dark-800/20 rounded-2xl border border-dashed border-dark-700">
                                     <FileText className="w-10 h-10 text-dark-500 mb-3" />
-                                    <p className="text-dark-300 font-medium text-sm leading-relaxed">Submit a resume to the <span className="text-primary-400">Analyzer</span><br/>to start tracking your ATS progression scores here.</p>
+                                    <p className="text-dark-300 font-medium text-sm leading-relaxed">Submit a resume to the <span className="text-primary-400">Analyzer</span><br />to start tracking your ATS progression scores here.</p>
                                 </div>
                             ) : (
                                 <div className="flex-1 w-full h-full min-h-[300px] -ml-4">
@@ -288,7 +300,7 @@ export default function Dashboard() {
                             {(!liveStats?.interviewScores || liveStats.interviewScores.length === 0) ? (
                                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6 m-4 ml-0 bg-dark-800/20 rounded-2xl border border-dashed border-dark-700">
                                     <Video className="w-10 h-10 text-dark-500 mb-3" />
-                                    <p className="text-dark-300 font-medium text-sm leading-relaxed">Launch an <span className="text-fuchsia-400">AI Mock Interview</span><br/>to unlock your comprehensive soft & technical skill metrics.</p>
+                                    <p className="text-dark-300 font-medium text-sm leading-relaxed">Launch an <span className="text-fuchsia-400">AI Mock Interview</span><br />to unlock your comprehensive soft & technical skill metrics.</p>
                                 </div>
                             ) : (
                                 <div className="flex-1 w-full h-full min-h-[300px] -ml-4">
@@ -370,7 +382,8 @@ export default function Dashboard() {
                 </>
             )}
         </div>
-    );
+        );
+    };
 
     const renderContent = () => {
         switch (activeTab) {
@@ -483,7 +496,7 @@ export default function Dashboard() {
 
                     <div className="flex items-center gap-4">
                         <div className="relative" ref={notificationsRef}>
-                            <button 
+                            <button
                                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                                 className="relative text-dark-400 hover:text-white transition-all p-2.5 rounded-xl hover:bg-dark-800 border border-transparent hover:border-dark-700"
                             >

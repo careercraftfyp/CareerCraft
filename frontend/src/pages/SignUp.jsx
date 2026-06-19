@@ -12,7 +12,7 @@ export default function SignUp() {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
 
-    const { signUp, user } = useAuth();
+    const { signUp, signInWithGoogle, user } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -32,7 +32,7 @@ export default function SignUp() {
         try {
             const { data, error } = await signUp(email, password, fullName);
             if (error) throw error;
-            
+
             // If Supabase returns a session immediately, email confirmation is OFF.
             // We don't need to show the "Check Email" screen, they will be auto-redirected.
             if (!data?.session) {
@@ -41,6 +41,18 @@ export default function SignUp() {
         } catch (err) {
             setError(err.message || 'Failed to create an account');
         } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        setError('');
+        setLoading(true);
+        try {
+            const { error } = await signInWithGoogle();
+            if (error) throw error;
+        } catch (err) {
+            setError(err.message || 'Google sign in failed');
             setLoading(false);
         }
     };
@@ -156,6 +168,23 @@ export default function SignUp() {
                                         )}
                                     </button>
                                 </form>
+
+                                <div className="mt-8 flex items-center justify-center gap-4">
+                                    <div className="h-px bg-white/5 w-full"></div>
+                                    <span className="text-dark-500 text-xs font-bold uppercase tracking-wider">OR</span>
+                                    <div className="h-px bg-white/5 w-full"></div>
+                                </div>
+
+                                <button
+                                    onClick={handleGoogleSignIn}
+                                    disabled={loading}
+                                    className="w-full mt-8 py-4 rounded-2xl border border-white/5 bg-white/5 text-white font-bold text-base hover:bg-white/10 hover:border-white/10 transition-all flex justify-center items-center gap-3 disabled:opacity-50"
+                                >
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                        <path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
+                                    </svg>
+                                    Continue with Google
+                                </button>
 
                                 <p className="text-center text-dark-500 mt-10 text-sm font-medium">
                                     Already have an account? <Link to="/login" className="text-primary-400 hover:text-white hover:underline transition-all font-bold">Log in</Link>

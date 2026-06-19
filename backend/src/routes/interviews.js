@@ -14,25 +14,13 @@ const TAVUS_API_BASE = 'https://tavusapi.com/v2';
 const DEFAULT_PERSONA_ID = 'pdac61133ac5';
 const DEFAULT_REPLICA_ID = 'r5f0577fc829';
 
-// Middleware to mock auth for now
-const mockAuth = async (req, res, next) => {
-    try {
-        const { data } = await supabase.from('users').select('id, full_name').limit(1);
-        req.user = { 
-            id: data?.[0]?.id || '00000000-0000-0000-0000-000000000000',
-            name: data?.[0]?.full_name || 'Candidate'
-        };
-    } catch(e) {
-        req.user = { id: '00000000-0000-0000-0000-000000000000', name: 'Candidate' };
-    }
-    next();
-};
+import { requireAuth } from '../middleware/auth.js';
 
 /**
  * Route: Initialize Interview Session
  * POST /api/interviews/initialize
  */
-router.post('/initialize', mockAuth, async (req, res) => {
+router.post('/initialize', requireAuth, async (req, res) => {
     try {
         const { position, field = '', difficulty = 'medium', mode = 'voice + video', company = '', jobDescription = '', resumeText = '' } = req.body;
 
@@ -81,12 +69,12 @@ router.post('/initialize', mockAuth, async (req, res) => {
             console.error('Failed to parse questions/summary JSON', e);
             questions = [
                 "Tell me about yourself and your background.",
-                `What interested you in the ${position} role specifically?`,
-                "Describe a complex technical challenge you solved recently.",
-                "How do you approach learning new technologies or frameworks?",
-                "Give an example of a time you had to work with a difficult teammate.",
-                "Where do you see yourself in three years?"
-            ]; // Improved fallback
+                `What drew you specifically to the ${position} role?`,
+                "Describe a complex technical challenge you solved recently and what your approach was.",
+                "How do you stay current with new technologies or industry developments?",
+                "Tell me about a time you had to navigate a difficult situation with a colleague or stakeholder.",
+                "Where do you see your career in the next three years, and how does this role fit into that?"
+            ];
         }
 
         // 2. Insert record into Supabase
@@ -110,32 +98,38 @@ router.post('/initialize', mockAuth, async (req, res) => {
 
         // 3. Create a Tavus Conversation
         const interviewContext = `
-        You are a CRITICAL senior executive recruiter for ${company || 'a top-tier firm'} interviewing for the ${position} position.
-        
+        You are a seasoned Senior Director of Talent at ${company || 'a prestigious firm'}, conducting a high-stakes screening interview for the ${position} role.
+        You are not hostile, but you are exacting. You have interviewed hundreds of candidates and have zero patience for rehearsed, hollow answers.
+        Your demeanor is calm, composed, and professionally intense — like a partner at a top consulting firm.
+
         [CANDIDATE RESUME SUMMARY]:
         ${resumeSummary}
 
-        [CRITICAL LATENCY CONSTRAINTS - YOU MUST OBEY]:
-        1. UNDER 2 SENTENCES: Every single response you give MUST be less than 2 sentences. Never go over.
-        2. ZERO FILLER: Do not say "That's great", "I understand", "Good answer", "Let's move on". Ask the next question immediately and aggressively.
-        3. NO WAITING: If they stop speaking for 2 seconds, immediately ask a follow-up or move to the next question.
+        [RESPONSE DISCIPLINE — NON-NEGOTIABLE]:
+        1. BREVITY: Every response must be 1-2 sentences maximum. You are assessing, not explaining.
+        2. NO AFFIRMATIONS: Never say "Great answer", "That's interesting", "Good point", or any filler. Transition directly and cleanly to your next question.
+        3. MAINTAIN PACE: Keep the interview moving. Do not linger on any single answer.
 
-        [PERSONALITY]:
-        - You have incredibly high standards.
-        - Be skeptical. If an answer is vague, press for details immediately.
-        - If their verbal answer contradicts their resume summary, point it out.
-        
-        [INTERVIEW SCRIPT]:
+        [INTERVIEWING STYLE]:
+        - Ask one question at a time. Never stack multiple questions.
+        - If an answer is vague or generic, calmly ask for a specific example: "Can you give me a concrete example of that?"
+        - If an answer lacks measurable impact, probe: "What was the actual outcome? Numbers, results, impact?"
+        - If their answer does not align with their resume, note it professionally: "Your resume mentions X — how does that connect to what you just described?"
+        - If they give a strong, specific answer, acknowledge it with silence and move on. Your silence is your approval.
+        - Never repeat a question. If they don't answer it well, move on and note it mentally.
+
+        [INTERVIEW STRUCTURE]:
+        Work through the following questions in order. Use your judgment to probe deeper on any question before moving forward.
         ${questions.map((q, i) => `[Q${i + 1}] ${q}`).join('\n')}
-        
-        Start now by briefly telling them to introduce themselves based on their resume.`;
+
+        Begin the interview now. Open with a single, welcoming but businesslike sentence, then ask them to walk you through their background briefly.`;
 
         const tavusPayload = {
             persona_id: DEFAULT_PERSONA_ID,
             replica_id: DEFAULT_REPLICA_ID,
             conversation_name: `Mock Interview - ${position}`,
             conversational_context: interviewContext,
-            custom_greeting: `Hello. I'm assessing you for the ${position} role. Quickly introduce yourself and your background.`,
+            custom_greeting: `Good to meet you. We have a focused session today for the ${position} role — let's make good use of the time. Please walk me through your background and what brought you to this opportunity.`,
             properties: {
                 max_call_duration: 3600,
                 participant_left_timeout: 10,
@@ -189,7 +183,7 @@ router.post('/initialize', mockAuth, async (req, res) => {
  * Route: End Interview Session
  * POST /api/interviews/:conversationId/end
  */
-router.post('/:conversationId/end', mockAuth, async (req, res) => {
+router.post('/:conversationId/end', requireAuth, async (req, res) => {
     try {
         const { conversationId } = req.params;
 
@@ -227,7 +221,7 @@ import path from 'path';
 
 const upload = multer({ dest: os.tmpdir() });
 
-router.post('/:sessionId/evaluate', mockAuth, upload.single('audio'), async (req, res) => {
+router.post('/:sessionId/evaluate', requireAuth, upload.single('audio'), async (req, res) => {
     try {
         const { sessionId } = req.params;
         const file = req.file;
@@ -269,8 +263,12 @@ router.post('/:sessionId/evaluate', mockAuth, upload.single('audio'), async (req
 
         console.log(`Processing evaluation for session: ${sessionId}, file: ${file.path}`);
 
-        // 1. Transcribe Audio using Whisper API
-        const audioStream = fs.createReadStream(file.path);
+        // 1. Rename file to ensure Whisper API accepts it
+        const audioPath = `${file.path}.webm`;
+        fs.renameSync(file.path, audioPath);
+
+        // 2. Transcribe Audio using Whisper API
+        const audioStream = fs.createReadStream(audioPath);
         const transcription = await openai.audio.transcriptions.create({
             file: audioStream,
             model: 'whisper-1',
@@ -281,7 +279,7 @@ router.post('/:sessionId/evaluate', mockAuth, upload.single('audio'), async (req
         console.log('Transcription successful:', transcript);
 
         // Clean up the uploaded temp file
-        try { fs.unlinkSync(file.path); } catch (e) { console.error('Failed to cleanup temp file', e); }
+        try { fs.unlinkSync(audioPath); } catch (e) { console.error('Failed to cleanup temp file', e); }
 
         if (!transcript || transcript.trim().length === 0) {
             return res.status(400).json({ error: 'No speech detected in audio.' });
@@ -352,9 +350,18 @@ Provide a comprehensive, objective performance report. Your response MUST be a v
 
     } catch (error) {
         console.error('Error evaluating interview:', error);
+        
+        // Failsafe: Update DB status to failed so frontend stops polling infinitely
+        try {
+            await supabase.from('interviews').update({ status: 'failed' }).eq('id', req.params.sessionId);
+        } catch (dbErr) {
+            console.error('Failed to update session to failed state:', dbErr);
+        }
+
         // Ensure temp file is cleaned up on error if it exists
         if (req.file?.path) {
             try { fs.unlinkSync(req.file.path); } catch (e) { }
+            try { fs.unlinkSync(req.file.path + '.webm'); } catch (e) { }
         }
         res.status(500).json({ error: error.message || 'Failed to evaluate interview' });
     }
@@ -364,7 +371,7 @@ Provide a comprehensive, objective performance report. Your response MUST be a v
  * Route: Get Interview Report
  * GET /api/interviews/:sessionId/report
  */
-router.get('/:sessionId/report', mockAuth, async (req, res) => {
+router.get('/:sessionId/report', requireAuth, async (req, res) => {
     try {
         const { sessionId } = req.params;
 
@@ -376,6 +383,10 @@ router.get('/:sessionId/report', mockAuth, async (req, res) => {
 
         if (error || !session) {
             return res.status(404).json({ error: 'Session not found' });
+        }
+
+        if (session.status === 'failed') {
+            return res.status(500).json({ error: 'Evaluation failed on the server. Audio could not be processed.' });
         }
 
         if (session.status !== 'completed' || !session.evaluation) {
@@ -393,7 +404,7 @@ router.get('/:sessionId/report', mockAuth, async (req, res) => {
  * Route: Get AI Training Recommendations
  * GET /api/interviews/recommendations
  */
-router.get('/recommendations', mockAuth, async (req, res) => {
+router.get('/recommendations', requireAuth, async (req, res) => {
     try {
         const userId = req.user.id;
 
@@ -497,7 +508,7 @@ The response MUST be a valid JSON object matching this structure:
  * Route: Complete a Practice Session
  * PATCH /api/interviews/recommendations/:id/complete
  */
-router.patch('/recommendations/:id/complete', mockAuth, async (req, res) => {
+router.patch('/recommendations/:id/complete', requireAuth, async (req, res) => {
     try {
         const { id } = req.params;
         const { error } = await supabase

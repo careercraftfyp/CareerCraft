@@ -4,6 +4,7 @@ import {
     Brain, Target, CheckCircle2, ArrowRight, Sparkles,
     BookOpen, MessageSquare, Zap, Play, Trophy
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -21,7 +22,12 @@ const PracticeHub = () => {
     const fetchRecommendations = async () => {
         try {
             setLoading(true);
-            const res = await fetch(`${API_URL}/interviews/recommendations`);
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            
+            const res = await fetch(`${API_URL}/interviews/recommendations`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (!res.ok) throw new Error('Failed to fetch recommendations');
             const data = await res.json();
             setRecommendations(data.recommendations || []);
@@ -35,8 +41,12 @@ const PracticeHub = () => {
 
     const handleComplete = async (id) => {
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
             const res = await fetch(`${API_URL}/interviews/recommendations/${id}/complete`, {
-                method: 'PATCH'
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
                 setRecommendations(prev =>

@@ -26,18 +26,10 @@ const upload = multer({
     }
 });
 
-const mockAuth = async (req, res, next) => {
-    try {
-        const { data } = await supabase.from('users').select('id').limit(1);
-        req.user = { id: data?.[0]?.id || '00000000-0000-0000-0000-000000000000' };
-    } catch(e) {
-        req.user = { id: '00000000-0000-0000-0000-000000000000' };
-    }
-    next();
-};
+import { requireAuth } from '../middleware/auth.js';
 
 // Route: Get Latest Resume
-router.get('/latest', mockAuth, async (req, res) => {
+router.get('/latest', requireAuth, async (req, res) => {
     try {
         const userId = req.user.id;
         const { data, error } = await supabase
@@ -67,7 +59,7 @@ router.get('/latest', mockAuth, async (req, res) => {
 });
 
 // Route: Get Resume History
-router.get('/', mockAuth, async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
     try {
         const userId = req.user.id;
         const { data, error } = await supabase
@@ -95,7 +87,7 @@ router.get('/', mockAuth, async (req, res) => {
 });
 
 // Route: Upload, Parse & Score Resume
-router.post('/upload', mockAuth, upload.single('resume'), async (req, res) => {
+router.post('/upload', requireAuth, upload.single('resume'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
