@@ -1,0 +1,195 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Theme Tokens mapped to CSS vars */
+  --color-brand: var(--brand);
+  --color-brand-glow: var(--brand-glow);
+  
+  --color-surface-base: var(--surface-base);
+  --color-surface-card: var(--surface-card);
+  --color-surface-hover: var(--surface-hover);
+  
+  --color-stroke-subtle: var(--stroke-subtle);
+  --color-stroke: var(--stroke);
+  
+  --color-content-base: var(--content-base);
+  --color-content-muted: var(--content-muted);
+}
+
+@layer base {
+  /* LIGHT MODE (Default) */
+  :root {
+    --brand: #C88D8E; /* Deeper Dusty Rose for light mode contrast */
+    --brand-glow: rgba(200, 141, 142, 0.2);
+    
+    --surface-base: #FAF7F5; /* Warm Platinum / Bone White */
+    --surface-card: #FFFFFF;
+    --surface-hover: #F2EAE5; /* Very pale warm rose tint */
+    
+    --stroke-subtle: rgba(200, 141, 142, 0.1);
+    --stroke: rgba(200, 141, 142, 0.25); /* Rose-tinted stroke */
+    
+    --content-base: #122E34; /* Dark Teal Slate font */
+    --content-muted: #677E8A; /* Steel Blue */
+  }
+
+  /* DARK MODE */
+  [data-theme="dark"] {
+    --brand: #C88D8E; /* Dusty Rose / Platinum Accent */
+    --brand-glow: rgba(200, 141, 142, 0.15);
+
+    --surface-base: #0E1D21; /* Deep Obsidian Slate */
+    --surface-card: #122E34; /* Dark Teal Slate */
+    --surface-hover: #1A3B42; /* Lighter Teal Hover */
+    
+    --stroke-subtle: rgba(255, 255, 255, 0.03); 
+    --stroke: rgba(103, 126, 138, 0.3); /* Steel blue #677E8A */
+    
+    --content-base: #F8FAFC; 
+    --content-muted: #ABAFB5; /* Muted Slate */
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--surface-base);
+    color: var(--content-base);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  ::selection {
+    background-color: var(--brand);
+    color: #ffffff;
+  }
+}
+
+@layer components {
+  /* Bento Grid Box Base */
+  .card-bento {
+    background-color: var(--surface-card);
+    border: 1px solid var(--stroke);
+    border-radius: 1rem;
+    transition: all 0.2s ease;
+  }
+
+  .card-bento:hover {
+    border-color: var(--brand);
+    box-shadow: 0 4px 20px var(--brand-glow);
+  }
+
+  /* Interactive Elements */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background-color: var(--brand);
+    color: white; /* Always white text on emerald button */
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px var(--brand-glow);
+  }
+
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid var(--stroke);
+    color: var(--content-base);
+    background-color: var(--surface-card);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--surface-hover);
+    border-color: var(--stroke);
+  }
+
+  .btn-secondary:active {
+    transform: scale(0.98);
+  }
+
+  /* Inputs */
+  .input-field {
+    width: 100%;
+    background-color: var(--surface-card);
+    border: 1px solid var(--stroke);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--content-base);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .input-with-icon {
+    padding-left: 2.75rem !important;
+  }
+
+  .input-field::placeholder {
+    color: var(--content-muted);
+  }
+
+  .input-field:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px var(--brand-glow);
+  }
+}
+
+/* Scrollbar styling for strict bento look - Mac Style */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--stroke);
+  border-radius: 10px;
+  border: 4px solid var(--surface-base);
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--content-muted);
+}
