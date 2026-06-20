@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /contact
+Allow: /services
+Allow: /pricing
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /cc-admin
+Disallow: /interview/
+Disallow: /forgot-password
+Disallow: /reset-password
+
+Sitemap: https://careercraft.cloud/sitemap.xml

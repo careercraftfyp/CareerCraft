@@ -4,6 +4,7 @@ import {
     Cpu, Zap, Shield, Globe, ArrowRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import SEO from '../components/SEO';
 
 const services = [
     {
@@ -50,6 +51,11 @@ export default function Services() {
             animate={{ opacity: 1 }}
             className="pt-32 pb-24 min-h-screen bg-surface-base overflow-hidden relative"
         >
+            <SEO 
+                title="AI Career Services & Optimization Tools"
+                description="Explore our precision AI resume analyzers, adaptive conversational AI interview prep platforms, and high-conversion cover letter generation tools."
+                keywords="CareerCraft services, AI resume analyzer, mock interview software, career mapping tool"
+            />
             {/* Dynamic Background Elements */}
             <div className="absolute top-0 right-[-10%] w-[500px] h-[500px] bg-brand-glow blur-[120px] rounded-full animate-float-slow" />
             <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-secondary-500/10 blur-[120px] rounded-full animate-float-slow" />

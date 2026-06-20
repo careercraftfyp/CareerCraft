@@ -11,6 +11,7 @@ import {
     CheckCircle,
 } from 'lucide-react';
 import Logo from '../components/Logo';
+import SEO from '../components/SEO';
 
 const features = [
     {
@@ -56,6 +57,11 @@ const stats = [
 
 const Home = () => (
     <div className="min-h-screen bg-surface-base text-content-base">
+        <SEO 
+            title="Practice AI Mock Interviews & Free ATS Resume Checker"
+            description="Boost your interview success rate with CareerCraft AI. Optimize your resume for ATS filters, practice speaking drills, and get real-time feedback on mock interviews."
+            keywords="AI mock interview prep, free ATS resume checker, resume gap finder, speech analytics, elevator pitch builder, virtual interview practice, CareerCraft"
+        />
 
         {/* ── Hero ── */}
         <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">

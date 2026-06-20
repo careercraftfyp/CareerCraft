@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Target, Users, Shield, Cpu, Sparkles, Zap, BrainCircuit, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
+import SEO from '../components/SEO';
 
 const layers = [
     {
@@ -28,6 +29,11 @@ export default function About() {
             animate={{ opacity: 1 }}
             className="pt-32 pb-24 min-h-screen bg-surface-base overflow-hidden relative"
         >
+            <SEO 
+                title="About Platform Architecture & AI Mission"
+                description="Explore the cognitive and trajectory layers of CareerCraft AI. Learn how we build synthetic mock interview simulations and ATS filters to score candidates."
+                keywords="CareerCraft architecture, career simulator, artificial intelligence agent, ATS filters analyzer, speak coaching"
+            />
             {/* AMBIENT BACKGROUND - EXTREMELY SUBTLE */}
             <div className="absolute top-[10%] right-[-5%] w-[1000px] h-[1000px] opacity-[0.03] pointer-events-none">
                 <Logo className="w-full h-full" />

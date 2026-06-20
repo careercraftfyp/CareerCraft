@@ -1,19 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, CheckCircle, CheckCircle2, Cpu, Mail, MapPin, MessageSquare, Phone, Rocket, Send, Shield, Target, X } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function Contact() {
+    const [searchParams] = useSearchParams();
+    const plan = searchParams.get('plan');
+
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        protocol: 'General Intelligence',
+        protocol: 'General Inquiry',
         message: ''
     });
+
+    useEffect(() => {
+        if (plan) {
+            setFormData(prev => ({
+                ...prev,
+                protocol: plan === 'Enterprise' ? 'Business Collaboration' : 'General Inquiry',
+                message: `Hi! I would like to subscribe to the ${plan} Plan. Please contact me with details on how to get started.`
+            }));
+        }
+    }, [plan]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -45,7 +60,7 @@ export default function Contact() {
             setFormData({
                 name: '',
                 email: '',
-                protocol: 'General Intelligence',
+                protocol: 'General Inquiry',
                 message: ''
             });
         } catch (err) {
@@ -58,6 +73,11 @@ export default function Contact() {
 
     return (
         <div className="pt-32 pb-24 min-h-screen bg-surface-base overflow-hidden relative">
+            <SEO 
+                title="Contact Support & Inquiries"
+                description="Get in touch with CareerCraft AI team. Submit technical help protocols, ask about organizational plans, or give feedback."
+                keywords="CareerCraft contact, support, customer inquiries, corporate collaboration"
+            />
             {/* Background Accents */}
             <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-brand/5 blur-[120px] rounded-full" />
             <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-secondary-500/5 blur-[120px] rounded-full" />
@@ -122,6 +142,17 @@ export default function Contact() {
                                     exit={{ opacity: 0, scale: 0.95 }}
                                     className="card-bento p-10 lg:p-12 relative overflow-hidden"
                                 >
+                                    {plan && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="p-4 mb-6 rounded-xl bg-brand/10 border border-brand/20 flex flex-col gap-1 text-content-base text-sm font-medium"
+                                        >
+                                            <span className="text-brand font-black uppercase text-xs tracking-wider">Plan Request Active</span>
+                                            <span>The <strong>{plan} Plan</strong> is currently available via manual onboarding. Fill out the details below, and our team will activate your profile.</span>
+                                        </motion.div>
+                                    )}
+
                                     <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                             <div className="space-y-2">
@@ -157,10 +188,10 @@ export default function Contact() {
                                                 onChange={handleChange}
                                                 className="input-field bg-dark-950"
                                             >
-                                                <option>General Inquiry</option>
-                                                <option>Business Collaboration</option>
-                                                <option>Technical Help</option>
-                                                <option>Feedback</option>
+                                                <option value="General Inquiry">General Inquiry</option>
+                                                <option value="Business Collaboration">Business Collaboration</option>
+                                                <option value="Technical Help">Technical Help</option>
+                                                <option value="Feedback">Feedback</option>
                                             </select>
                                         </div>
                                         <div className="space-y-2">

@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Check, Rocket, Zap, Crown, Sparkles, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import SEO from '../components/SEO';
 
 const plans = [
     {
@@ -40,6 +41,11 @@ export default function Pricing() {
             animate={{ opacity: 1 }}
             className="pt-32 pb-24 min-h-screen bg-surface-base overflow-hidden relative"
         >
+            <SEO 
+                title="Premium Pricing & Plans"
+                description="Choose the ideal CareerCraft plan for your job hunt. Unlock unlimited ATS scans, sentiment-aware AI video interviews, and specialized cover letters."
+                keywords="CareerCraft pricing, professional plan, enterprise ATS matching, career intelligence seats"
+            />
             {/* Visual Accents */}
             <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-brand/5 blur-[120px] rounded-full animate-float-slow" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-secondary-500/5 blur-[120px] rounded-full animate-float-slow" />
@@ -117,7 +123,7 @@ export default function Pricing() {
                             </div>
 
                             <Link
-                                to={plan.name === 'Enterprise' ? '/contact' : '/signup'}
+                                to={plan.name === 'Standard' ? '/signup' : `/contact?plan=${plan.name}`}
                                 className={`w-full py-4 rounded-xl font-black uppercase tracking-[0.2em] text-sm text-center transition-all ${plan.popular
                                     ? 'btn-primary shadow-xl shadow-brand-glow text-content-base'
                                     : 'bg-surface-base text-content-base border border-stroke hover:border-dark-500 hover:bg-surface-hover'
