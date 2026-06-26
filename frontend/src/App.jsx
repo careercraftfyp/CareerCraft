@@ -17,6 +17,7 @@ import InterviewReport from './pages/InterviewReport';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import AdminPanel from './pages/AdminPanel';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
@@ -67,6 +68,9 @@ function App() {
                   <Profile />
                 </ProtectedRoute>
               } />
+
+              {/* Catch-all Wildcard Route for Page Not Found */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
         </div>

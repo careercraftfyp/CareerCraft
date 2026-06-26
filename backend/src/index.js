@@ -12,6 +12,7 @@ import contactRoutes from './routes/contact.js';
 import adminRoutes from './routes/admin.js';
 import { standardLimiter } from './middleware/rateLimiter.js';
 
+// Configure environment variables
 dotenv.config();
 
 const app = express();
