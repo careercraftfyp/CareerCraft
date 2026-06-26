@@ -368,15 +368,48 @@ router.post('/:sessionId/evaluate', requireAuth, aiLimiter, upload.single('audio
             acousticAnalysisPromise
         ]);
 
-        const transcript = transcription.text;
-        console.log('Transcription successful:', transcript);
+        const candidateWhisperText = transcription.text;
+        console.log('Transcription successful:', candidateWhisperText);
 
         // Clean up the uploaded temp file
         try { fs.unlinkSync(audioPath); } catch (e) { console.error('Failed to cleanup temp file', e); }
 
-        if (!transcript || transcript.trim().length === 0) {
+        if (!candidateWhisperText || candidateWhisperText.trim().length === 0) {
             return res.status(400).json({ error: 'No speech detected in audio.' });
         }
+
+        let transcript = `Candidate: ${candidateWhisperText}`;
+        let tavusTranscriptFound = false;
+
+        if (session.tavus_conversation_id) {
+            try {
+                console.log(`Attempting to fetch full dialog transcript from Tavus for conversation ID: ${session.tavus_conversation_id}`);
+                const tavusRes = await tavusRequest(`/conversations/${session.tavus_conversation_id}?verbose=true`, 'GET');
+                if (tavusRes.ok) {
+                    const tavusData = await tavusRes.json();
+                    const rawTranscript = tavusData.properties?.transcript || tavusData.application?.transcription_ready || tavusData.transcript;
+                    
+                    if (Array.isArray(rawTranscript) && rawTranscript.length > 0) {
+                        console.log(`Fetched Tavus transcript containing ${rawTranscript.length} entries.`);
+                        const lines = rawTranscript.map(entry => {
+                            const roleName = entry.role === 'assistant' ? 'Interviewer' : 'Candidate';
+                            const cleanContent = entry.content || '';
+                            return `${roleName}: ${cleanContent.trim()}`;
+                        });
+                        transcript = lines.join('\n');
+                        tavusTranscriptFound = true;
+                    } else {
+                        console.log('Tavus response did not contain transcript entries:', tavusData);
+                    }
+                } else {
+                    const errText = await tavusRes.text();
+                    console.error(`Failed to fetch Tavus conversation: ${tavusRes.status} - ${errText}`);
+                }
+            } catch (err) {
+                console.error('Error retrieving Tavus conversation:', err);
+            }
+        }
+
 
         let acousticText = '';
         if (acousticAnalysis.status === 'success') {
