@@ -384,31 +384,102 @@ router.post('/:sessionId/evaluate', requireAuth, aiLimiter, upload.single('audio
         if (session.tavus_conversation_id) {
             try {
                 console.log(`Attempting to fetch full dialog transcript from Tavus for conversation ID: ${session.tavus_conversation_id}`);
-                const tavusRes = await tavusRequest(`/conversations/${session.tavus_conversation_id}?verbose=true`, 'GET');
-                if (tavusRes.ok) {
-                    const tavusData = await tavusRes.json();
-                    const rawTranscript = tavusData.properties?.transcript || tavusData.application?.transcription_ready || tavusData.transcript;
-                    
-                    if (Array.isArray(rawTranscript) && rawTranscript.length > 0) {
-                        console.log(`Fetched Tavus transcript containing ${rawTranscript.length} entries.`);
-                        const lines = rawTranscript.map(entry => {
-                            const roleName = entry.role === 'assistant' ? 'Interviewer' : 'Candidate';
-                            const cleanContent = entry.content || '';
-                            return `${roleName}: ${cleanContent.trim()}`;
-                        });
-                        transcript = lines.join('\n');
-                        tavusTranscriptFound = true;
-                    } else {
-                        console.log('Tavus response did not contain transcript entries:', tavusData);
+                
+                // Retry polling to allow Tavus to finalize the transcription events
+                let attempts = 0;
+                while (attempts < 3 && !tavusTranscriptFound) {
+                    if (attempts > 0) {
+                        console.log(`Retrying Tavus transcript fetch... Attempt ${attempts + 1}/3`);
+                        await new Promise(r => setTimeout(r, 1500));
                     }
-                } else {
-                    const errText = await tavusRes.text();
-                    console.error(`Failed to fetch Tavus conversation: ${tavusRes.status} - ${errText}`);
+                    
+                    const tavusRes = await tavusRequest(`/conversations/${session.tavus_conversation_id}?verbose=true`, 'GET');
+                    if (tavusRes.ok) {
+                        const tavusData = await tavusRes.json();
+                        
+                        // Access the transcript from the application.transcription_ready event inside events list
+                        const events = tavusData.events || [];
+                        const txEvent = events.find(e => e.event_type === 'application.transcription_ready');
+                        const rawTranscript = txEvent?.properties?.transcript;
+                        
+                        if (Array.isArray(rawTranscript) && rawTranscript.length > 0) {
+                            console.log(`Fetched Tavus transcript containing ${rawTranscript.length} entries on attempt ${attempts + 1}.`);
+                            const lines = rawTranscript.map(entry => {
+                                const roleName = entry.role === 'assistant' ? 'Interviewer' : 'Candidate';
+                                const cleanContent = entry.content || '';
+                                return `${roleName}: ${cleanContent.trim()}`;
+                            });
+                            transcript = lines.join('\n');
+                            tavusTranscriptFound = true;
+                        } else {
+                            console.log(`Tavus response events did not contain application.transcription_ready yet on attempt ${attempts + 1}`);
+                        }
+                    } else {
+                        const errText = await tavusRes.text();
+                        console.error(`Failed to fetch Tavus conversation on attempt ${attempts + 1}: ${tavusRes.status} - ${errText}`);
+                    }
+                    attempts++;
                 }
             } catch (err) {
                 console.error('Error retrieving Tavus conversation:', err);
             }
         }
+
+        if (!tavusTranscriptFound) {
+            console.log('Tavus transcript not found or incomplete. Reconstructing dialogue using GPT...');
+            try {
+                const questionsList = session.questions || [
+                    "Please walk me through your background and what brought you to this opportunity.",
+                    "Describe a complex technical challenge you solved recently and what your approach was.",
+                    "How do you stay current with new technologies or industry developments?",
+                    "Tell me about a time you had to navigate a difficult situation with a colleague or stakeholder.",
+                    "Where do you see your career in the next three years, and how does this role fit into that?"
+                ];
+                
+                const reconstructionPrompt = `
+You are an expert transcription editor. 
+Your task is to take:
+1. The list of questions the Interviewer asked.
+2. The raw candidate speech transcription (which is a single continuous stream of all their answers).
+
+You must reconstruct the back-and-forth dialogue of the interview, matching each question with the candidate's corresponding response.
+If the candidate did not answer a question, write "[No response]" for that turn.
+
+Interviewer Questions:
+${questionsList.map((q, i) => `Q${i + 1}: ${q}`).join('\n')}
+
+Candidate Raw Speech:
+"${candidateWhisperText}"
+
+Format the output strictly as a dialogue with "Interviewer:" and "Candidate:" prefixes on separate lines. Do not add any extra text or conversational filler outside the dialogue.
+
+Example Output:
+Interviewer: Good to meet you. Please walk me through your background.
+Candidate: Hey, so I'm a computer science finalist...
+Interviewer: Great, what drew you specifically to the role?
+Candidate: [Candidate response here]
+`;
+
+                const dialogueResponse = await openai.chat.completions.create({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        { role: 'system', content: 'You are a dialogue reconstruction specialist.' },
+                        { role: 'user', content: reconstructionPrompt }
+                    ]
+                });
+                
+                const reconstructedDialog = dialogueResponse.choices[0].message.content.trim();
+                if (reconstructedDialog && reconstructedDialog.length > 0) {
+                    transcript = reconstructedDialog;
+                    console.log('Dialogue successfully reconstructed via GPT!');
+                }
+            } catch (err) {
+                console.error('Failed to reconstruct dialogue via GPT:', err);
+                transcript = `Candidate: ${candidateWhisperText}`;
+            }
+        }
+
+
 
 
         let acousticText = '';
