@@ -111,17 +111,17 @@ router.get('/stats', requireAuth, async (req, res) => {
         const completedPractice = safePractice.filter(p => p.status === 'completed').length;
         const totalPractice = safePractice.length;
 
-        // Calculate progress dynamically based on completed activities:
-        // - Completed Mock Interviews: +25% each
-        // - Polished STAR Stories: +15% each
-        // - Elevator Pitch attempts: +15% each
-        // - Completed drills/practice sessions: +10% each
-        const progressScore = 
-            (completedInterviews.length * 25) + 
-            ((starCount || 0) * 15) + 
-            ((pitchCount || 0) * 15) + 
-            (completedPractice * 10);
-        const trainingProgress = Math.min(100, progressScore);
+        // Calculate progress dynamically based on completed drills / practice sessions:
+        // - Base target is 10 drills minimum for gradual progression (0% if none, increases 10% per drill).
+        // - Scaled target is totalPractice if there are more than 10 assigned drills.
+        const targetDrills = Math.max(10, totalPractice);
+        let trainingProgress = targetDrills > 0 ? Math.round((completedPractice / targetDrills) * 100) : 0;
+
+        // Cap at 99% if they have not completed all assigned drills in their list
+        const incompleteDrills = totalPractice - completedPractice;
+        if (incompleteDrills > 0 && trainingProgress >= 100) {
+            trainingProgress = 99;
+        }
 
         // Calculate Weekly Growth Metrics
         const oneWeekAgo = new Date();
