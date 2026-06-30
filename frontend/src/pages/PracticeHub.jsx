@@ -914,12 +914,12 @@ function LiveSpeakingLab({ onExit }) {
     );
 }
 
-// ── CATEGORY PICKER ──────────────────────────────────────────────────────────
+//  CATEGORY PICKER ──────────────────────────────────────────────────────────
 const CATEGORIES = [
     { id: 'speaking', label: 'Live Speaking Lab', emoji: '🎤', desc: 'Speak into mic → AI transcript & coaching', bgClass: 'bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/20', accentClass: 'text-blue-400', sub: 'AI Feedback' },
     { id: 'code_debug', label: 'Knowledge Flip', emoji: '🃏', desc: 'Flip cards: code bugs for CS, myth-busters for all other domains', bgClass: 'bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20', accentClass: 'text-emerald-400', sub: '6 Domains' },
     { id: 'domain', label: 'Domain Knowledge', emoji: '🌐', desc: 'Expert Q&As: CS, Business, Finance, Healthcare & more', bgClass: 'bg-brand/10 border-brand/30 hover:bg-brand/20', accentClass: 'text-brand', sub: '6 Domains' },
-    { id: 'reasoning', label: 'Brain Teasers', emoji: '🧩', desc: 'Logic puzzles, estimation, and case study challenges', bgClass: 'bg-purple-500/10 border-purple-500/30 hover:bg-purple-500/20', accentClass: 'text-purple-400', sub: '5 Puzzles' },
+    { id: 'reasoning', label: 'Brain Teasers', emoji: '🧩', desc: 'Logic puzzles, estimation and case study challenges', bgClass: 'bg-purple-500/10 border-purple-500/30 hover:bg-purple-500/20', accentClass: 'text-purple-400', sub: '5 Puzzles' },
 ];
 
 function AIdrills() {
@@ -1021,5 +1021,6 @@ const PracticeHub = () => {
         </div>
     );
 };
+// end
 
 export default PracticeHub;
