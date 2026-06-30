@@ -11,6 +11,28 @@ import ElevatorPitchTrainer from '../components/training/ElevatorPitchTrainer';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+const recordDrillCompletion = async (skillTag, domainName) => {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) return;
+
+        await fetch(`${API_URL}/training/drills/complete`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                skill_tag: skillTag,
+                domain: domainName || 'General'
+            })
+        });
+    } catch (err) {
+        console.error('Failed to record drill completion:', err);
+    }
+};
+
 // ── DOMAIN KNOWLEDGE Q&A ────────────────────────────────────────────────────
 const DOMAIN_QUESTIONS = {
     'Computer Science': [
@@ -136,114 +158,164 @@ const CHALLENGE_BANKS = {
         },
     ],
     'Business': [
-        { type: 'fact', emoji: '📊', title: 'TRUE OR FALSE?',
-          front: '"A company with $10M revenue and $8M costs is always profitable."',
-          back: '❌ FALSE\n\nProfit depends on WHICH costs you measure. Cash flow can be negative even when accounting shows profit due to accruals, depreciation timing, and deferred payments.',
-          funFact: '💡 WeWork reported $1.8B revenue in 2019 but $3.5B net losses. Massive revenue ≠ profitability.' },
-        { type: 'fact', emoji: '🚀', title: 'TRUE OR FALSE?',
-          front: '"More product features always leads to better sales and happier customers."',
-          back: '❌ FALSE\n\nFeature bloat creates complexity and decision fatigue. Apple\'s iPod succeeded by REMOVING features. The Paradox of Choice: more options often reduces satisfaction.',
-          funFact: '💡 A Jam Study showed stores with 6 varieties sold 10x more than stores with 24 — less choice drives more decisions.' },
-        { type: 'fact', emoji: '💰', title: 'MYTH OR FACT?',
-          front: '"Price increases always reduce demand for a product."',
-          back: '❌ MYTH\n\nVeblen Goods (luxury items) often see INCREASED demand when price rises. Higher price signals exclusivity and quality. Rolls-Royce, luxury handbags, and fine dining operate this way.',
-          funFact: '💡 Thorstein Veblen coined "conspicuous consumption" in 1899 — describing purchases made specifically to signal wealth.' },
-        { type: 'fact', emoji: '🏢', title: 'DID YOU KNOW?',
-          front: '"Amazon was unprofitable for 20+ years yet investors kept funding it. Why?"',
-          back: '✅ Jeff Bezos deliberately reinvested ALL profits into growth. He called it a "feature, not a bug" — prioritizing market share and infrastructure over short-term profit.\n\nThis works when your TAM (total addressable market) is enormous.',
-          funFact: '💡 Amazon AWS generates the majority of Amazon\'s operating profit — separate from the e-commerce business entirely.' },
-        { type: 'fact', emoji: '📉', title: 'TRUE OR FALSE?',
-          front: '"Acquiring new customers is more important than retaining existing ones for long-term growth."',
-          back: '❌ FALSE\n\nAcquiring a new customer costs 5-25x more than retaining one. A 5% increase in retention increases profits 25-95% (Bain & Company). Loyal customers also refer others.',
-          funFact: '💡 Customer Lifetime Value (CLV) exists to quantify why retention is more valuable than acquisition in most business models.' },
+        {
+            type: 'fact', emoji: '📊', title: 'TRUE OR FALSE?',
+            front: '"A company with $10M revenue and $8M costs is always profitable."',
+            back: '❌ FALSE\n\nProfit depends on WHICH costs you measure. Cash flow can be negative even when accounting shows profit due to accruals, depreciation timing, and deferred payments.',
+            funFact: '💡 WeWork reported $1.8B revenue in 2019 but $3.5B net losses. Massive revenue ≠ profitability.'
+        },
+        {
+            type: 'fact', emoji: '🚀', title: 'TRUE OR FALSE?',
+            front: '"More product features always leads to better sales and happier customers."',
+            back: '❌ FALSE\n\nFeature bloat creates complexity and decision fatigue. Apple\'s iPod succeeded by REMOVING features. The Paradox of Choice: more options often reduces satisfaction.',
+            funFact: '💡 A Jam Study showed stores with 6 varieties sold 10x more than stores with 24 — less choice drives more decisions.'
+        },
+        {
+            type: 'fact', emoji: '💰', title: 'MYTH OR FACT?',
+            front: '"Price increases always reduce demand for a product."',
+            back: '❌ MYTH\n\nVeblen Goods (luxury items) often see INCREASED demand when price rises. Higher price signals exclusivity and quality. Rolls-Royce, luxury handbags, and fine dining operate this way.',
+            funFact: '💡 Thorstein Veblen coined "conspicuous consumption" in 1899 — describing purchases made specifically to signal wealth.'
+        },
+        {
+            type: 'fact', emoji: '🏢', title: 'DID YOU KNOW?',
+            front: '"Amazon was unprofitable for 20+ years yet investors kept funding it. Why?"',
+            back: '✅ Jeff Bezos deliberately reinvested ALL profits into growth. He called it a "feature, not a bug" — prioritizing market share and infrastructure over short-term profit.\n\nThis works when your TAM (total addressable market) is enormous.',
+            funFact: '💡 Amazon AWS generates the majority of Amazon\'s operating profit — separate from the e-commerce business entirely.'
+        },
+        {
+            type: 'fact', emoji: '📉', title: 'TRUE OR FALSE?',
+            front: '"Acquiring new customers is more important than retaining existing ones for long-term growth."',
+            back: '❌ FALSE\n\nAcquiring a new customer costs 5-25x more than retaining one. A 5% increase in retention increases profits 25-95% (Bain & Company). Loyal customers also refer others.',
+            funFact: '💡 Customer Lifetime Value (CLV) exists to quantify why retention is more valuable than acquisition in most business models.'
+        },
     ],
     'Marketing': [
-        { type: 'fact', emoji: '📣', title: 'TRUE OR FALSE?',
-          front: '"Email marketing has a lower ROI than social media advertising."',
-          back: '❌ FALSE\n\nEmail generates $42 for every $1 spent (4,200% ROI) — highest of any marketing channel. Social media ads typically return $2-$5 per $1 spent.',
-          funFact: '💡 The first marketing email was sent in 1978 by Gary Thuerk to 400 ARPANET users. It generated $13M in sales — and was also history\'s first spam.' },
-        { type: 'fact', emoji: '🔍', title: 'MYTH OR FACT?',
-          front: '"Posting at 10am on Tuesdays is the universal best time for social media engagement."',
-          back: '❌ MYTH\n\nThe "best time" depends entirely on YOUR specific audience\'s behavior. Use your own analytics to find when YOUR followers are most active — no universal answer exists.',
-          funFact: '💡 Instagram changed from chronological to engagement-based algorithm in 2016, making content quality far more important than posting time.' },
-        { type: 'fact', emoji: '🍔', title: 'DID YOU KNOW?',
-          front: '"Which spends more on marketing per year: McDonald\'s or Harvard + Yale + Princeton combined?"',
-          back: '✅ McDonald\'s ($800M+/year) spends more than Harvard, Yale, and Princeton\'s entire annual budgets combined (~$600M).\n\nThis shows the power of consistent brand investment over decades.',
-          funFact: '💡 McDonald\'s Golden Arches are reportedly more recognized globally than the Christian cross — testament to omnipresent, consistent branding.' },
-        { type: 'fact', emoji: '🎯', title: 'TRUE OR FALSE?',
-          front: '"97% of first-time website visitors don\'t convert (buy or sign up) on their first visit."',
-          back: '✅ TRUE\n\nMost decisions require 7+ touchpoints before conversion. This is why retargeting ads, email drip campaigns, and content marketing exist — to capture people across multiple visits.',
-          funFact: '💡 "The Rule of 7" says a prospect needs to see your message 7 times before acting. This concept originated in 1930s Hollywood film marketing.' },
-        { type: 'fact', emoji: '🎨', title: 'MYTH OR FACT?',
-          front: '"Color alone can increase brand recognition by up to 80%."',
-          back: '✅ FACT\n\nUniversity of Loyola research shows color increases brand recognition up to 80%. This is why brands obsessively protect color trademarks (Tiffany Blue, UPS Brown, Coca-Cola Red).',
-          funFact: '💡 Owens Corning was the first to trademark a color — their pink fiberglass insulation (Pantone 474) has been legally protected since 1985.' },
+        {
+            type: 'fact', emoji: '📣', title: 'TRUE OR FALSE?',
+            front: '"Email marketing has a lower ROI than social media advertising."',
+            back: '❌ FALSE\n\nEmail generates $42 for every $1 spent (4,200% ROI) — highest of any marketing channel. Social media ads typically return $2-$5 per $1 spent.',
+            funFact: '💡 The first marketing email was sent in 1978 by Gary Thuerk to 400 ARPANET users. It generated $13M in sales — and was also history\'s first spam.'
+        },
+        {
+            type: 'fact', emoji: '🔍', title: 'MYTH OR FACT?',
+            front: '"Posting at 10am on Tuesdays is the universal best time for social media engagement."',
+            back: '❌ MYTH\n\nThe "best time" depends entirely on YOUR specific audience\'s behavior. Use your own analytics to find when YOUR followers are most active — no universal answer exists.',
+            funFact: '💡 Instagram changed from chronological to engagement-based algorithm in 2016, making content quality far more important than posting time.'
+        },
+        {
+            type: 'fact', emoji: '🍔', title: 'DID YOU KNOW?',
+            front: '"Which spends more on marketing per year: McDonald\'s or Harvard + Yale + Princeton combined?"',
+            back: '✅ McDonald\'s ($800M+/year) spends more than Harvard, Yale, and Princeton\'s entire annual budgets combined (~$600M).\n\nThis shows the power of consistent brand investment over decades.',
+            funFact: '💡 McDonald\'s Golden Arches are reportedly more recognized globally than the Christian cross — testament to omnipresent, consistent branding.'
+        },
+        {
+            type: 'fact', emoji: '🎯', title: 'TRUE OR FALSE?',
+            front: '"97% of first-time website visitors don\'t convert (buy or sign up) on their first visit."',
+            back: '✅ TRUE\n\nMost decisions require 7+ touchpoints before conversion. This is why retargeting ads, email drip campaigns, and content marketing exist — to capture people across multiple visits.',
+            funFact: '💡 "The Rule of 7" says a prospect needs to see your message 7 times before acting. This concept originated in 1930s Hollywood film marketing.'
+        },
+        {
+            type: 'fact', emoji: '🎨', title: 'MYTH OR FACT?',
+            front: '"Color alone can increase brand recognition by up to 80%."',
+            back: '✅ FACT\n\nUniversity of Loyola research shows color increases brand recognition up to 80%. This is why brands obsessively protect color trademarks (Tiffany Blue, UPS Brown, Coca-Cola Red).',
+            funFact: '💡 Owens Corning was the first to trademark a color — their pink fiberglass insulation (Pantone 474) has been legally protected since 1985.'
+        },
     ],
     'Finance': [
-        { type: 'fact', emoji: '📈', title: 'TRUE OR FALSE?',
-          front: '"A higher stock price means the company is more valuable."',
-          back: '❌ FALSE\n\nPrice alone means nothing without shares outstanding. Market Cap = Price × Shares. Apple at $185/share × 15B shares = $2.8T. A $3,000 stock could be worth far less.',
-          funFact: '💡 Berkshire Hathaway Class A shares trade at ~$700,000 per share — Buffett never split them to deter short-term traders.' },
-        { type: 'fact', emoji: '🏦', title: 'MYTH OR FACT?',
-          front: '"Paying off all your debt immediately is always the best financial decision."',
-          back: '❌ MYTH\n\nIf debt costs 3% (e.g., mortgage) but investments return 10% historically, carrying the cheap debt and investing the difference generates more wealth over time. This is called arbitrage.',
-          funFact: '💡 This arbitrage between borrowing cost and investment return is a core concept in corporate capital structure optimization.' },
-        { type: 'fact', emoji: '👴', title: 'DID YOU KNOW?',
-          front: '"Warren Buffett is worth $130B+. What percentage did he earn AFTER turning 50?"',
-          back: '✅ ~99% of Buffett\'s wealth was earned after age 50 — and 97% after age 65.\n\nHis secret: compound interest + time. He started investing at age 11 and never stopped.',
-          funFact: '💡 If Buffett started at 30 and retired at 60, his net worth would be ~$11.9M instead of $130B. Time in market > timing the market.' },
-        { type: 'fact', emoji: '📉', title: 'TRUE OR FALSE?',
-          front: '"Diversification eliminates all investment risk."',
-          back: '❌ FALSE\n\nDiversification eliminates UNSYSTEMATIC risk (individual company risk) but NOT systematic risk (market-wide). In the 2008 crash, diversified portfolios still lost 30-50%.',
-          funFact: '💡 Harry Markowitz won the 1990 Nobel in Economics for Modern Portfolio Theory — mathematically proving diversification maximizes return for a given risk level.' },
-        { type: 'fact', emoji: '⚠️', title: 'TRUE OR FALSE?',
-          front: '"A profitable company cannot go bankrupt."',
-          back: '❌ FALSE\n\nA company can be profitable on paper but run out of CASH. Toys R Us had profitable years before bankruptcy. Cash flow — not accounting profit — determines solvency.',
-          funFact: '💡 Accounting uses accrual: revenue is recorded when earned, not when cash arrives. A company owed $10M with $0 in the bank cannot pay its suppliers — despite being "profitable".' },
+        {
+            type: 'fact', emoji: '📈', title: 'TRUE OR FALSE?',
+            front: '"A higher stock price means the company is more valuable."',
+            back: '❌ FALSE\n\nPrice alone means nothing without shares outstanding. Market Cap = Price × Shares. Apple at $185/share × 15B shares = $2.8T. A $3,000 stock could be worth far less.',
+            funFact: '💡 Berkshire Hathaway Class A shares trade at ~$700,000 per share — Buffett never split them to deter short-term traders.'
+        },
+        {
+            type: 'fact', emoji: '🏦', title: 'MYTH OR FACT?',
+            front: '"Paying off all your debt immediately is always the best financial decision."',
+            back: '❌ MYTH\n\nIf debt costs 3% (e.g., mortgage) but investments return 10% historically, carrying the cheap debt and investing the difference generates more wealth over time. This is called arbitrage.',
+            funFact: '💡 This arbitrage between borrowing cost and investment return is a core concept in corporate capital structure optimization.'
+        },
+        {
+            type: 'fact', emoji: '👴', title: 'DID YOU KNOW?',
+            front: '"Warren Buffett is worth $130B+. What percentage did he earn AFTER turning 50?"',
+            back: '✅ ~99% of Buffett\'s wealth was earned after age 50 — and 97% after age 65.\n\nHis secret: compound interest + time. He started investing at age 11 and never stopped.',
+            funFact: '💡 If Buffett started at 30 and retired at 60, his net worth would be ~$11.9M instead of $130B. Time in market > timing the market.'
+        },
+        {
+            type: 'fact', emoji: '📉', title: 'TRUE OR FALSE?',
+            front: '"Diversification eliminates all investment risk."',
+            back: '❌ FALSE\n\nDiversification eliminates UNSYSTEMATIC risk (individual company risk) but NOT systematic risk (market-wide). In the 2008 crash, diversified portfolios still lost 30-50%.',
+            funFact: '💡 Harry Markowitz won the 1990 Nobel in Economics for Modern Portfolio Theory — mathematically proving diversification maximizes return for a given risk level.'
+        },
+        {
+            type: 'fact', emoji: '⚠️', title: 'TRUE OR FALSE?',
+            front: '"A profitable company cannot go bankrupt."',
+            back: '❌ FALSE\n\nA company can be profitable on paper but run out of CASH. Toys R Us had profitable years before bankruptcy. Cash flow — not accounting profit — determines solvency.',
+            funFact: '💡 Accounting uses accrual: revenue is recorded when earned, not when cash arrives. A company owed $10M with $0 in the bank cannot pay its suppliers — despite being "profitable".'
+        },
     ],
     'Healthcare': [
-        { type: 'fact', emoji: '🧠', title: 'MYTH OR FACT?',
-          front: '"Humans only use 10% of their brains."',
-          back: '❌ MYTH\n\nBrain imaging (fMRI) shows activity in virtually ALL brain regions — just not simultaneously. Over a day, essentially 100% of the brain is used. This myth originated from misquoted 19th century neuroscience.',
-          funFact: '💡 The brain consumes ~20% of the body\'s total energy despite being only 2% of body weight — roughly 400 calories per day just to think.' },
-        { type: 'fact', emoji: '💊', title: 'TRUE OR FALSE?',
-          front: '"Antibiotics can cure the flu and common cold."',
-          back: '❌ FALSE\n\nAntibiotics ONLY work on bacteria. Flu and cold are caused by VIRUSES. Using antibiotics against viruses has zero therapeutic effect — and contributes to dangerous antibiotic resistance.',
-          funFact: '💡 Antibiotic resistance is projected to kill 10 million people/year by 2050 — more than cancer — one of the most serious global health threats.' },
-        { type: 'fact', emoji: '🥕', title: 'MYTH OR FACT?',
-          front: '"Eating carrots improves your eyesight beyond normal."',
-          back: '❌ MYTH\n\nVitamin A (in carrots) prevents night blindness from DEFICIENCY. If your levels are normal, more carrots don\'t help your vision at all.\n\nThis myth was WWII British propaganda to hide radar technology.',
-          funFact: '💡 Britain spread the "carrots help pilots see in the dark" story to fool Germany into thinking exceptional vision — not radar — was why their pilots performed better at night.' },
-        { type: 'fact', emoji: '🦠', title: 'TRUE OR FALSE?',
-          front: '"Your gut contains more neurons than your spinal cord (the \'second brain\')."',
-          back: '✅ TRUE\n\nThe enteric nervous system has 100-500 million neurons — more than the spinal cord. It can operate independently of the brain and produces 95% of the body\'s serotonin.',
-          funFact: '💡 Gut bacteria can influence mood, anxiety, and decision-making via the vagus nerve — why scientists study the microbiome for mental health treatments.' },
-        { type: 'fact', emoji: '❤️', title: 'TRUE OR FALSE?',
-          front: '"Mental health disorders only affect a small percentage of the population."',
-          back: '❌ FALSE\n\n1 in 4 people worldwide will experience a mental health condition in their lifetime. Depression is the leading cause of disability globally — one of the most common health conditions.',
-          funFact: '💡 Despite prevalence, only 1 in 3 people with a mental health disorder receive treatment — primarily due to stigma, lack of access, and misdiagnosis.' },
+        {
+            type: 'fact', emoji: '🧠', title: 'MYTH OR FACT?',
+            front: '"Humans only use 10% of their brains."',
+            back: '❌ MYTH\n\nBrain imaging (fMRI) shows activity in virtually ALL brain regions — just not simultaneously. Over a day, essentially 100% of the brain is used. This myth originated from misquoted 19th century neuroscience.',
+            funFact: '💡 The brain consumes ~20% of the body\'s total energy despite being only 2% of body weight — roughly 400 calories per day just to think.'
+        },
+        {
+            type: 'fact', emoji: '💊', title: 'TRUE OR FALSE?',
+            front: '"Antibiotics can cure the flu and common cold."',
+            back: '❌ FALSE\n\nAntibiotics ONLY work on bacteria. Flu and cold are caused by VIRUSES. Using antibiotics against viruses has zero therapeutic effect — and contributes to dangerous antibiotic resistance.',
+            funFact: '💡 Antibiotic resistance is projected to kill 10 million people/year by 2050 — more than cancer — one of the most serious global health threats.'
+        },
+        {
+            type: 'fact', emoji: '🥕', title: 'MYTH OR FACT?',
+            front: '"Eating carrots improves your eyesight beyond normal."',
+            back: '❌ MYTH\n\nVitamin A (in carrots) prevents night blindness from DEFICIENCY. If your levels are normal, more carrots don\'t help your vision at all.\n\nThis myth was WWII British propaganda to hide radar technology.',
+            funFact: '💡 Britain spread the "carrots help pilots see in the dark" story to fool Germany into thinking exceptional vision — not radar — was why their pilots performed better at night.'
+        },
+        {
+            type: 'fact', emoji: '🦠', title: 'TRUE OR FALSE?',
+            front: '"Your gut contains more neurons than your spinal cord (the \'second brain\')."',
+            back: '✅ TRUE\n\nThe enteric nervous system has 100-500 million neurons — more than the spinal cord. It can operate independently of the brain and produces 95% of the body\'s serotonin.',
+            funFact: '💡 Gut bacteria can influence mood, anxiety, and decision-making via the vagus nerve — why scientists study the microbiome for mental health treatments.'
+        },
+        {
+            type: 'fact', emoji: '❤️', title: 'TRUE OR FALSE?',
+            front: '"Mental health disorders only affect a small percentage of the population."',
+            back: '❌ FALSE\n\n1 in 4 people worldwide will experience a mental health condition in their lifetime. Depression is the leading cause of disability globally — one of the most common health conditions.',
+            funFact: '💡 Despite prevalence, only 1 in 3 people with a mental health disorder receive treatment — primarily due to stigma, lack of access, and misdiagnosis.'
+        },
     ],
     'Engineering': [
-        { type: 'fact', emoji: '⚙️', title: 'MYTH OR FACT?',
-          front: '"Good engineers always choose the highest-performing technical solution."',
-          back: '❌ MYTH\n\nEngineers optimize across constraints: cost, safety, schedule, and maintainability. The "good enough" solution that meets all requirements, fits the budget, and is maintainable is often the RIGHT choice.',
-          funFact: '💡 The "worse is better" philosophy argues simple, slightly flawed systems dominate complex perfect ones — because adoption, reliability, and maintainability matter more than theoretical purity.' },
-        { type: 'fact', emoji: '🗼', title: 'DID YOU KNOW?',
-          front: '"The Eiffel Tower changes height depending on the temperature. By how much?"',
-          back: '✅ Up to 15cm (6 inches) in summer due to thermal expansion of iron.\n\nAt 300m tall, a 40°C temperature swing causes 12-18cm of expansion — a significant engineering consideration.',
-          funFact: '💡 All long bridges, railways, and pipelines use expansion joints — deliberate gaps that allow structures to expand and contract without buckling.' },
-        { type: 'fact', emoji: '🐛', title: 'TRUE OR FALSE?',
-          front: '"The term \'computer bug\' originated from an actual physical bug found in a computer."',
-          back: '✅ TRUE\n\nIn 1947, engineers at Harvard found a moth trapped in a relay of the Mark II. Grace Hopper\'s team taped it into the logbook: "First actual case of bug being found."',
-          funFact: '💡 Grace Hopper also invented the first compiler and popularized the idea that programming could use English-like commands — fundamentally changing how computers are programmed.' },
-        { type: 'fact', emoji: '🔄', title: 'TRUE OR FALSE?',
-          front: '"Redundancy in safety-critical engineering systems is wasteful and unnecessary cost."',
-          back: '❌ FALSE\n\nRedundancy is ESSENTIAL. Aircraft have triple/quadruple-redundant flight controls. Spacecraft use redundant radiation-hardened computers. Cost of redundancy << cost of failure.',
-          funFact: '💡 The Boeing 777 has three independent hydraulic systems, each capable of flying the plane solo. Probability of all three failing simultaneously: less than 1 in a billion flight hours.' },
-        { type: 'fact', emoji: '⚡', title: 'MYTH OR FACT?',
-          front: '"Optimize code performance as early as possible during development."',
-          back: '❌ MYTH\n\n"Premature optimization is the root of all evil" — Donald Knuth.\n\nWrite correct, maintainable code first. Then PROFILE to find real bottlenecks. Only 3-4% of code typically causes 97% of performance issues.',
-          funFact: '💡 Donald Knuth\'s The Art of Computer Programming is the most comprehensive algorithms work ever written. Bill Gates said: "If you think you\'re a good programmer... read Knuth\'s Art."' },
+        {
+            type: 'fact', emoji: '⚙️', title: 'MYTH OR FACT?',
+            front: '"Good engineers always choose the highest-performing technical solution."',
+            back: '❌ MYTH\n\nEngineers optimize across constraints: cost, safety, schedule, and maintainability. The "good enough" solution that meets all requirements, fits the budget, and is maintainable is often the RIGHT choice.',
+            funFact: '💡 The "worse is better" philosophy argues simple, slightly flawed systems dominate complex perfect ones — because adoption, reliability, and maintainability matter more than theoretical purity.'
+        },
+        {
+            type: 'fact', emoji: '🗼', title: 'DID YOU KNOW?',
+            front: '"The Eiffel Tower changes height depending on the temperature. By how much?"',
+            back: '✅ Up to 15cm (6 inches) in summer due to thermal expansion of iron.\n\nAt 300m tall, a 40°C temperature swing causes 12-18cm of expansion — a significant engineering consideration.',
+            funFact: '💡 All long bridges, railways, and pipelines use expansion joints — deliberate gaps that allow structures to expand and contract without buckling.'
+        },
+        {
+            type: 'fact', emoji: '🐛', title: 'TRUE OR FALSE?',
+            front: '"The term \'computer bug\' originated from an actual physical bug found in a computer."',
+            back: '✅ TRUE\n\nIn 1947, engineers at Harvard found a moth trapped in a relay of the Mark II. Grace Hopper\'s team taped it into the logbook: "First actual case of bug being found."',
+            funFact: '💡 Grace Hopper also invented the first compiler and popularized the idea that programming could use English-like commands — fundamentally changing how computers are programmed.'
+        },
+        {
+            type: 'fact', emoji: '🔄', title: 'TRUE OR FALSE?',
+            front: '"Redundancy in safety-critical engineering systems is wasteful and unnecessary cost."',
+            back: '❌ FALSE\n\nRedundancy is ESSENTIAL. Aircraft have triple/quadruple-redundant flight controls. Spacecraft use redundant radiation-hardened computers. Cost of redundancy << cost of failure.',
+            funFact: '💡 The Boeing 777 has three independent hydraulic systems, each capable of flying the plane solo. Probability of all three failing simultaneously: less than 1 in a billion flight hours.'
+        },
+        {
+            type: 'fact', emoji: '⚡', title: 'MYTH OR FACT?',
+            front: '"Optimize code performance as early as possible during development."',
+            back: '❌ MYTH\n\n"Premature optimization is the root of all evil" — Donald Knuth.\n\nWrite correct, maintainable code first. Then PROFILE to find real bottlenecks. Only 3-4% of code typically causes 97% of performance issues.',
+            funFact: '💡 Donald Knuth\'s The Art of Computer Programming is the most comprehensive algorithms work ever written. Bill Gates said: "If you think you\'re a good programmer... read Knuth\'s Art."'
+        },
     ],
 };
 
@@ -259,11 +331,11 @@ const TEASERS = [
 // ── FLIP CARD COMPONENT ──────────────────────────────────────────────────────
 const COLOR_MAP = {
     emerald: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', accent: 'text-emerald-400', dot: 'bg-emerald-500', btn: 'bg-emerald-600' },
-    blue:    { bg: 'bg-blue-500/10',    border: 'border-blue-500/20',    accent: 'text-blue-400',    dot: 'bg-blue-500',    btn: 'bg-blue-600' },
-    brand:   { bg: 'bg-brand/10',       border: 'border-brand/20',       accent: 'text-brand',       dot: 'bg-brand',       btn: 'bg-brand' },
-    purple:  { bg: 'bg-purple-500/10',  border: 'border-purple-500/20',  accent: 'text-purple-400',  dot: 'bg-purple-500',  btn: 'bg-purple-600' },
-    rose:    { bg: 'bg-rose-500/10',    border: 'border-rose-500/20',    accent: 'text-rose-400',    dot: 'bg-rose-500',    btn: 'bg-rose-600' },
-    orange:  { bg: 'bg-orange-500/10',  border: 'border-orange-500/20',  accent: 'text-orange-400',  dot: 'bg-orange-500',  btn: 'bg-orange-600' },
+    blue: { bg: 'bg-blue-500/10', border: 'border-blue-500/20', accent: 'text-blue-400', dot: 'bg-blue-500', btn: 'bg-blue-600' },
+    brand: { bg: 'bg-brand/10', border: 'border-brand/20', accent: 'text-brand', dot: 'bg-brand', btn: 'bg-brand' },
+    purple: { bg: 'bg-purple-500/10', border: 'border-purple-500/20', accent: 'text-purple-400', dot: 'bg-purple-500', btn: 'bg-purple-600' },
+    rose: { bg: 'bg-rose-500/10', border: 'border-rose-500/20', accent: 'text-rose-400', dot: 'bg-rose-500', btn: 'bg-rose-600' },
+    orange: { bg: 'bg-orange-500/10', border: 'border-orange-500/20', accent: 'text-orange-400', dot: 'bg-orange-500', btn: 'bg-orange-600' },
 };
 
 function FlipCard({ item, flipped, onFlip, colorKey }) {
@@ -282,7 +354,7 @@ function FlipCard({ item, flipped, onFlip, colorKey }) {
                             : <div className="flex items-center gap-2">
                                 <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${c.bg} ${c.accent} ${c.border}`}>{item.language}</span>
                                 <span className={`text-xs font-black italic uppercase ${c.accent}`}>{item.title}</span>
-                              </div>
+                            </div>
                         }
                         <span className="text-xl opacity-30 group-hover:opacity-60 transition-opacity">🔄</span>
                     </div>
@@ -355,7 +427,10 @@ function CodeDebugDrill({ onExit }) {
     const c = COLOR_MAP[colorKey] || COLOR_MAP.emerald;
 
     const handleNext = () => {
-        if (index + 1 >= bank.length) setFinished(true);
+        if (index + 1 >= bank.length) {
+            setFinished(true);
+            recordDrillCompletion('structure', domain);
+        }
         else { setIndex(i => i + 1); setFlipped(false); }
     };
 
@@ -446,7 +521,10 @@ function DomainQuiz({ onExit }) {
     const current = questions[questionIndex];
 
     const handleNext = () => {
-        if (questionIndex + 1 >= questions.length) setFinished(true);
+        if (questionIndex + 1 >= questions.length) {
+            setFinished(true);
+            recordDrillCompletion('domain_knowledge', domain);
+        }
         else { setQuestionIndex(i => i + 1); setRevealed(false); setUserAnswer(''); }
     };
 
@@ -566,7 +644,10 @@ function BrainTeasers({ onExit }) {
     const item = TEASERS[index];
 
     const handleNext = () => {
-        if (index + 1 >= TEASERS.length) setFinished(true);
+        if (index + 1 >= TEASERS.length) {
+            setFinished(true);
+            recordDrillCompletion('reasoning', 'General');
+        }
         else { setIndex(i => i + 1); setRevealed(false); setUserAnswer(''); }
     };
 
@@ -703,6 +784,7 @@ function LiveSpeakingLab({ onExit }) {
             const { feedback: fb } = await feedbackRes.json();
             setFeedback(fb);
             setStage('feedback');
+            recordDrillCompletion('communication', domain);
         } catch (err) {
             setError(err.message || 'Something went wrong. Try again.');
             setStage('ready');
@@ -834,10 +916,10 @@ function LiveSpeakingLab({ onExit }) {
 
 // ── CATEGORY PICKER ──────────────────────────────────────────────────────────
 const CATEGORIES = [
-    { id: 'speaking',   label: 'Live Speaking Lab',   emoji: '🎤', desc: 'Speak into mic → AI transcript & coaching',             bgClass: 'bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/20',    accentClass: 'text-blue-400',    sub: 'AI Feedback' },
-    { id: 'code_debug', label: 'Knowledge Flip',      emoji: '🃏', desc: 'Flip cards — code bugs for CS, myth-busters for all other domains', bgClass: 'bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20', accentClass: 'text-emerald-400', sub: '6 Domains' },
-    { id: 'domain',     label: 'Domain Knowledge',     emoji: '🌐', desc: 'Expert Q&As — CS, Business, Finance, Healthcare & more',  bgClass: 'bg-brand/10 border-brand/30 hover:bg-brand/20',             accentClass: 'text-brand',       sub: '6 Domains' },
-    { id: 'reasoning',  label: 'Brain Teasers',        emoji: '🧩', desc: 'Logic puzzles, estimation, and case study challenges',    bgClass: 'bg-purple-500/10 border-purple-500/30 hover:bg-purple-500/20', accentClass: 'text-purple-400',  sub: '5 Puzzles' },
+    { id: 'speaking', label: 'Live Speaking Lab', emoji: '🎤', desc: 'Speak into mic → AI transcript & coaching', bgClass: 'bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/20', accentClass: 'text-blue-400', sub: 'AI Feedback' },
+    { id: 'code_debug', label: 'Knowledge Flip', emoji: '🃏', desc: 'Flip cards: code bugs for CS, myth-busters for all other domains', bgClass: 'bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20', accentClass: 'text-emerald-400', sub: '6 Domains' },
+    { id: 'domain', label: 'Domain Knowledge', emoji: '🌐', desc: 'Expert Q&As: CS, Business, Finance, Healthcare & more', bgClass: 'bg-brand/10 border-brand/30 hover:bg-brand/20', accentClass: 'text-brand', sub: '6 Domains' },
+    { id: 'reasoning', label: 'Brain Teasers', emoji: '🧩', desc: 'Logic puzzles, estimation, and case study challenges', bgClass: 'bg-purple-500/10 border-purple-500/30 hover:bg-purple-500/20', accentClass: 'text-purple-400', sub: '5 Puzzles' },
 ];
 
 function AIdrills() {
@@ -859,7 +941,7 @@ function AIdrills() {
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-brand flex items-center gap-2 mb-1"><Sparkles className="w-3 h-3" /> Choose Your Drill</p>
                         <h3 className="text-2xl font-black text-content-base italic uppercase">Pick a category to start</h3>
-                        <p className="text-content-muted text-sm mt-1">All drills work instantly — no loading required.</p>
+                        <p className="text-content-muted text-sm mt-1">All drills work instantly, no loading required.</p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         {CATEGORIES.map((cat, i) => (
@@ -895,8 +977,8 @@ function AIdrills() {
 // ── MAIN PRACTICE HUB ────────────────────────────────────────────────────────
 const HUB_TABS = [
     { id: 'drills', label: 'AI Drills', icon: Zap },
-    { id: 'star',   label: 'STAR Builder', icon: BookMarked },
-    { id: 'pitch',  label: 'Elevator Pitch', icon: Mic2 },
+    { id: 'star', label: 'STAR Builder', icon: BookMarked },
+    { id: 'pitch', label: 'Elevator Pitch', icon: Mic2 },
 ];
 
 const PracticeHub = () => {
@@ -913,7 +995,7 @@ const PracticeHub = () => {
                     AI Personalized <span className="text-brand">Practice Hub</span>
                 </motion.h2>
                 <p className="text-content-muted max-w-2xl font-medium text-sm">
-                    Four drill types, six domains, live speaking analysis — sharpen every interview skill.
+                    Four drill types, six domains, live speaking & sharpen every interview skill.
                 </p>
             </header>
             <div className="flex gap-2 p-1 bg-surface-hover rounded-2xl border border-stroke w-fit">
@@ -932,8 +1014,8 @@ const PracticeHub = () => {
             <AnimatePresence mode="wait">
                 <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
                     {activeTab === 'drills' && <AIdrills />}
-                    {activeTab === 'star'   && <STARBuilder />}
-                    {activeTab === 'pitch'  && <ElevatorPitchTrainer />}
+                    {activeTab === 'star' && <STARBuilder />}
+                    {activeTab === 'pitch' && <ElevatorPitchTrainer />}
                 </motion.div>
             </AnimatePresence>
         </div>

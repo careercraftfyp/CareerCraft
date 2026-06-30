@@ -87,10 +87,41 @@ router.get('/stats', requireAuth, async (req, res) => {
             console.error(practiceError);
         }
 
+        // Fetch STAR stories count for progress
+        const { count: starCount, error: starError } = await supabase
+            .from('star_stories')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId);
+
+        if (starError && starError.code !== 'PGRST205') {
+            console.error(starError);
+        }
+
+        // Fetch Elevator Pitch attempts count for progress
+        const { count: pitchCount, error: pitchError } = await supabase
+            .from('pitch_attempts')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId);
+
+        if (pitchError && pitchError.code !== 'PGRST205') {
+            console.error(pitchError);
+        }
+
         const safePractice = practiceSessions || [];
         const completedPractice = safePractice.filter(p => p.status === 'completed').length;
         const totalPractice = safePractice.length;
-        const trainingProgress = totalPractice > 0 ? Math.round((completedPractice / totalPractice) * 100) : 0;
+
+        // Calculate progress dynamically based on completed activities:
+        // - Completed Mock Interviews: +25% each
+        // - Polished STAR Stories: +15% each
+        // - Elevator Pitch attempts: +15% each
+        // - Completed drills/practice sessions: +10% each
+        const progressScore = 
+            (completedInterviews.length * 25) + 
+            ((starCount || 0) * 15) + 
+            ((pitchCount || 0) * 15) + 
+            (completedPractice * 10);
+        const trainingProgress = Math.min(100, progressScore);
 
         // Calculate Weekly Growth Metrics
         const oneWeekAgo = new Date();
@@ -132,7 +163,7 @@ router.get('/stats', requireAuth, async (req, res) => {
             totalResumes: resumeCount || 0,
             totalInterviews: completedInterviews.length,
             avgAtsScore: `${avgAtsScore}/100`,
-            practiceTime: `${completedInterviews.length * 20 + completedPractice * 10}m`, // 20m per interview, 10m per practice
+            practiceTime: `${completedInterviews.length * 20 + completedPractice * 10 + (starCount || 0) * 5 + (pitchCount || 0) * 3}m`, // 20m/interview, 10m/practice, 5m/STAR, 3m/pitch
             trainingProgress: `${trainingProgress}%`,
             lastInterviewDate: lastInterview ? lastInterview.created_at : null,
             lastInterviewId: lastInterview ? lastInterview.id : null,

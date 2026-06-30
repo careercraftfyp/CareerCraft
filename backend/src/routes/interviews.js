@@ -771,10 +771,6 @@ router.patch('/recommendations/:id/complete', requireAuth, async (req, res) => {
     }
 });
 
-/**
- * Route: Get Interview History
- * GET /api/interviews/
- */
 router.get('/', requireAuth, async (req, res) => {
     try {
         const userId = req.user.id;
@@ -785,11 +781,44 @@ router.get('/', requireAuth, async (req, res) => {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
-        res.json(data || []);
+
+        // Dynamically format transcripts into a structured turn-by-turn dialogue
+        const formattedData = (data || []).map(item => {
+            if (item.transcript && !item.transcript.includes('Interviewer:') && !item.transcript.includes('System:')) {
+                let cleanText = item.transcript.replace(/^Candidate:\s*/i, '').trim();
+                const qList = Array.isArray(item.questions) && item.questions.length > 0 ? item.questions : [
+                    "Please walk me through your background and what brought you to this opportunity.",
+                    "Describe a complex technical challenge you solved recently and what your approach was.",
+                    "How do you stay current with new technologies or industry developments?",
+                    "Tell me about a time you had to navigate a difficult situation with a colleague or stakeholder.",
+                    "Where do you see your career in the next three years, and how does this role fit into that?"
+                ];
+                
+                let answers = cleanText.split(/\n+/).map(a => a.trim()).filter(Boolean);
+                if (answers.length === 0) {
+                    answers = [cleanText];
+                }
+                
+                let dialogueLines = [];
+                for (let i = 0; i < qList.length; i++) {
+                    dialogueLines.push(`Interviewer: ${qList[i]}`);
+                    let candidateAnswer = answers[i] || '';
+                    if (i === 0 && answers.length === 1) {
+                        candidateAnswer = cleanText;
+                    }
+                    dialogueLines.push(`Candidate: ${candidateAnswer || '[No response]'}`);
+                }
+                item.transcript = dialogueLines.join('\n');
+            }
+            return item;
+        });
+
+        res.json(formattedData || []);
     } catch (error) {
         console.error('Error fetching interview history:', error);
         res.status(500).json({ error: 'Failed to fetch interview history' });
     }
 });
+
 
 export default router;

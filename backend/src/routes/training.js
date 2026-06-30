@@ -461,4 +461,61 @@ Evaluate the response and provide coaching. Return ONLY this JSON:
     }
 });
 
+/**
+ * POST /api/training/drills/complete
+ * Records a drill completion. If there is a pending recommendation session with the matching
+ * skill_tag, it marks it as completed. Otherwise, it creates a new completed practice session.
+ */
+router.post('/drills/complete', requireAuth, async (req, res) => {
+    try {
+        const { skill_tag, domain } = req.body;
+        const userId = req.user.id;
+
+        // 1. Check for a pending practice session with matching skill_tag
+        const { data: pendingSessions, error: fetchErr } = await supabase
+            .from('practice_sessions')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('status', 'pending')
+            .eq('skill_tag', skill_tag || 'communication')
+            .order('created_at', { ascending: true })
+            .limit(1);
+
+        if (fetchErr) throw fetchErr;
+
+        if (pendingSessions && pendingSessions.length > 0) {
+            // Update the oldest pending session to completed
+            const { data, error: updateErr } = await supabase
+                .from('practice_sessions')
+                .update({ status: 'completed' })
+                .eq('id', pendingSessions[0].id)
+                .select()
+                .single();
+
+            if (updateErr) throw updateErr;
+            return res.json({ success: true, message: 'Pending recommendation completed', session: data });
+        } else {
+            // Create a new completed practice session record
+            const { data, error: insertErr } = await supabase
+                .from('practice_sessions')
+                .insert([{
+                    user_id: userId,
+                    exercise_type: 'AI Drill',
+                    skill_tag: skill_tag || 'communication',
+                    domain: domain || 'General',
+                    difficulty_level: 2,
+                    status: 'completed'
+                }])
+                .select()
+                .single();
+
+            if (insertErr) throw insertErr;
+            return res.json({ success: true, message: 'New drill completion recorded', session: data });
+        }
+    } catch (err) {
+        console.error('Error completing drill:', err);
+        res.status(500).json({ error: 'Failed to record drill completion.' });
+    }
+});
+
 export default router;

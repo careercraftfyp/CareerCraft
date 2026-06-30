@@ -448,32 +448,7 @@ export default function Dashboard() {
                         </p>
                     </motion.div>
 
-                    {/* Audio Transcript */}
-                    {selectedInterview.transcript && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.65 }}
-                            className="card-bento p-8 shadow-xl border-white/5"
-                        >
-                            <h3 className="text-indigo-400 text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2">
-                                <MessageSquare className="w-4 h-4" /> Dialogue Transcript
-                            </h3>
-                            <div className="bg-surface-base rounded-2xl p-6 border border-stroke max-h-[300px] overflow-y-auto space-y-4 font-mono text-sm leading-relaxed text-content-base">
-                                {selectedInterview.transcript.split('\n').map((line, idx) => {
-                                    const isInterviewer = line.startsWith('Interviewer:') || line.startsWith('System:');
-                                    return (
-                                        <div key={idx} className={`p-3 rounded-xl border ${isInterviewer ? 'bg-indigo-500/5 border-indigo-500/10 text-indigo-300' : 'bg-brand-glow/5 border-brand/10 text-content-base'}`}>
-                                            <span className="font-bold uppercase tracking-wider block text-[10px] opacity-75 mb-1">
-                                                {isInterviewer ? 'Sarah (AI Recruiter)' : 'Bilal Shabbir (Candidate)'}
-                                            </span>
-                                            {line.replace(/^(Interviewer:|Candidate:|System:)\s*/, '')}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </motion.div>
-                    )}
+
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
