@@ -26,7 +26,10 @@ export default function SignUp() {
         e.preventDefault();
         setError('');
 
-        if (password.length < 6) return setError('Password must be at least 6 characters');
+        if (password.length < 8) return setError('Password must be at least 8 characters');
+        if (!/[A-Z]/.test(password)) return setError('Password must contain at least one uppercase letter');
+        if (!/[0-9]/.test(password)) return setError('Password must contain at least one number');
+        if (!/[^A-Za-z0-9]/.test(password)) return setError('Password must contain at least one special character/symbol');
 
         setLoading(true);
 
@@ -161,7 +164,7 @@ export default function SignUp() {
                                                 placeholder="••••••••"
                                                 className="input-field input-with-icon pl-12 pr-12"
                                                 required
-                                                minLength={6}
+                                                minLength={8}
                                             />
                                             <button
                                                 type="button"
